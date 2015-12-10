@@ -1,9 +1,14 @@
 html{
-  background: url(/images/home_background.jpg) no-repeat center center fixed; 
+  /*background: url(../images/home_background.jpg) no-repeat center center fixed; 
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;
-  background-size: cover;
+  background-size: cover;*/
+  background: #3C3C3E;
+}
+
+body, html {
+    height: 100%;
 }
 
 body {
@@ -24,7 +29,16 @@ body {
 
 #primaryButton{
     font-size : 10pt;
+    height: 80%%;
 }
-.container{
-
+#content{
+  background: #689096;
+  border-radius: 8px;
+  height: 90%;
+}
+.top-buffer {
+  margin-top:1%;
+}
+#grey-text {
+  color:#57575B;
 }
