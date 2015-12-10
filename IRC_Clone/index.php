@@ -6,6 +6,7 @@
     <script type="text/javascript" src="js/chat.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
     <link rel="stylesheet" href="css/style.css" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700,800' rel='stylesheet' type='text/css'>
 </head>
 <body>
 
@@ -33,11 +34,10 @@
     <div class="container">
 
         <div class="starter-template">
-            <button class="btn btn-lg btn-primary" id="primaryButton">Primary</button>
-            <h1>Bootstrap starter template</h1>
-            <p class="lead">Use this document as a way to quickly start any new project.<br> All you get is this text and a mostly barebones HTML document.</p>
+            
+            <h1 id="homeTitle">IRC-CLONE</h1>
+            <!--<button class="btn btn-lg btn-primary" id="primaryButton">Primary</button>-->
         </div>
-
     </div>
 </body>
 </html>

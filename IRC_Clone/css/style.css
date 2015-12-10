@@ -1,5 +1,5 @@
 html{
-  background: url(/images/home_background.jpg) no-repeat center center fixed; 
+  background: url(../images/home_background.jpg) no-repeat center center fixed; 
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;
@@ -15,16 +15,16 @@ body {
   text-align: center;
   color : white; 
 }
-/*#mainBody{
-    background-image : url("/images/home_background.jpg");
-    background-position : 50% 50%;
-    background-repeat : no-repeat;
-    background-size : 100%;
-}*/
+.container{
+
+}
 
 #primaryButton{
     font-size : 10pt;
 }
-.container{
 
+#homeTitle{
+    font-family : Open Sans, sans-serif;
+    font-weight : 300;
+    font-size : 114pt;
 }
