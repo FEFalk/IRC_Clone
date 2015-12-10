@@ -1,5 +1,9 @@
 html{
+<<<<<<< HEAD
   /*background: url(../images/home_background.jpg) no-repeat center center fixed; 
+=======
+  background: url(../images/home_background.jpg) no-repeat center center fixed; 
+>>>>>>> origin/master
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;
@@ -20,17 +24,15 @@ body {
   text-align: center;
   color : white; 
 }
-/*#mainBody{
-    background-image : url("/images/home_background.jpg");
-    background-position : 50% 50%;
-    background-repeat : no-repeat;
-    background-size : 100%;
-}*/
+.container{
+
+}
 
 #primaryButton{
     font-size : 10pt;
     height: 80%%;
 }
+<<<<<<< HEAD
 #content{
   background: #689096;
   border-radius: 8px;
@@ -41,4 +43,11 @@ body {
 }
 #grey-text {
   color:#57575B;
+=======
+
+#homeTitle{
+    font-family : Open Sans, sans-serif;
+    font-weight : 300;
+    font-size : 114pt;
+>>>>>>> origin/master
 }
