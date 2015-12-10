@@ -1,5 +1,4 @@
 html{
-<<<<<<< HEAD
   /*background: url(../images/home_background.jpg) no-repeat center center fixed; 
 =======
   background: url(../images/home_background.jpg) no-repeat center center fixed; 
@@ -32,7 +31,7 @@ body {
     font-size : 10pt;
     height: 80%%;
 }
-<<<<<<< HEAD
+
 #content{
   background: #689096;
   border-radius: 8px;
@@ -41,13 +40,6 @@ body {
 .top-buffer {
   margin-top:1%;
 }
+
 #grey-text {
   color:#57575B;
-=======
-
-#homeTitle{
-    font-family : Open Sans, sans-serif;
-    font-weight : 300;
-    font-size : 114pt;
->>>>>>> origin/master
-}
