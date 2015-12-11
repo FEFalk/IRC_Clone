@@ -17,6 +17,8 @@ interface UserInterface
     public function removePermission($flag);
     
     public function broadcast(array $msg);
+    public function send(array $msg);
+    
     public function getChannels();
     public function inChannel(Channel $chan);
     public function joinChannel(Channel $chan, $permissions);

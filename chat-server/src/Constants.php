@@ -3,17 +3,17 @@ namespace IRCClone
 
 abstract class ServerPermissions
 {
-    const OPERATOR = 1;
+    const SERVER_OPERATOR = 1;
+}
+
+abstract class ChannelModes
+{
+    const MODE_PRIVATE = 1;
+    const MODE_MODERATED = 2;
 }
 
 abstract class ChannelPermissions
 {
-    const PRIVATE = 1;
-    const MODERATED = 2;
-}
-
-abstract class ChannelUserPermissions
-{
-    const OPERATOR = 1;
-    const VOICE = 2;
+    const CHANNEL_OPERATOR = 1;
+    const CHANNEL_VOICE = 2;
 }

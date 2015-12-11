@@ -26,9 +26,10 @@ class Channel implements ChannelInterface
     // Broadcast to active users
     public function send(array $msg)
     {
+        $msg['to'] = $this->name;
         foreach($this->users as $user)
         {
-            $user->getConnection()->send($msg);
+            $user->send($msg);
         }
     }
     
@@ -42,6 +43,11 @@ class Channel implements ChannelInterface
         $this->users->detach($user);
     }
     
+    public function hasUser(User $user)
+    {
+        return $this->users->contains($user);
+    }
+    
     public function getName()
     {
         return $this->name;
@@ -52,7 +58,7 @@ class Channel implements ChannelInterface
         return $this->topic;
     }
     
-    public function setTopic(string $topic)
+    public function setTopic($topic)
     {
         $this->topic = $topic;
     }
@@ -67,7 +73,7 @@ class Channel implements ChannelInterface
         return $this->password;
     }
     
-    public function setPassword(string $password)
+    public function setPassword($password)
     {
         $this->password = $password;
     }
@@ -77,17 +83,17 @@ class Channel implements ChannelInterface
         return $this->modes;
     }
     
-    public function addMode(int $flag)
+    public function addMode($flag)
     {
         $this->modes |= $flag;
     }
     
-    public function removeMode(int $flag)
+    public function removeMode($flag)
     {
         $this->modes &= (~ $flag);
     }
     
-    public function hasMode(int $flag)
+    public function hasMode($flag)
     {
         return $this->modes & $flag;
     }

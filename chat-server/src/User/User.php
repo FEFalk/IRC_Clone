@@ -16,7 +16,7 @@ class User implements UserInterface
     private $id;
     private $name;
     private $email;
-    private $permissions;
+    private $permissions; // Server permissions
     
     public function __construct(array $userinfo, ChatConnection $conn, Chat $chat)
     {
@@ -33,24 +33,39 @@ class User implements UserInterface
     // Broadcast to user channels
     public function broadcast(array $msg)
     {
-        foreach($this->channels as $chan) {
-            $chan->broadcast($msg);
+        $msg['from'] = $this->name;
+        foreach($this->channels as $obj) {
+            $obj->chan->send($msg);
         }
+    }
+    
+    public function send(array $msg)
+    {
+        $this->connection->send($msg);
     }
     
     public function joinChannel(Channel $chan, $permissions)
     {
-        $this->channels[] = $chan;
+        $this->channels->attach((object) array('chan' => $chan, 'permissions' => $permissions));
     }
     
     public function leaveChannel(Channel $chan)
     {
-        unset($this->channels[$chan]);
+        foreach($this->channels as $ch) {
+            if ($ch->chan === $chan) {
+                $this->channels->detach($ch);
+                return;
+            }
+        }
     }
     
     public function inChannel(Channel $chan)
     {
-        return array_key_exists($chan, $this->channels);
+        foreach($this->channels as $ch) {
+            if ($ch->chan === $chan)
+                return true;
+        }
+        return false;
     }
     
     public function getChannels()

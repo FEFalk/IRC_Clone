@@ -3,6 +3,7 @@
 namespace IRCClone;
 
 use \PDO;
+use IRCClone\User;
 
 class Database
 {
@@ -24,24 +25,44 @@ class Database
             array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''));
     }
     
-    public function getUserInfo($user)
+    public function getUserInfo($username)
     {
-        $stmt = $this->db->prepare('SELECT `id`, `name`, `password`, `email`, `permissions` FROM `users` WHERE `name` = ? LIMIT 1;');
-        $stmt->execute(array($user));
+        $stmt = $this->db->prepare('SELECT `id`, `name`, `password`, `email`, `permissions` FROM `users` WHERE `name` = ? OR `email` = ? LIMIT 1;');
+        $stmt->execute(array($username, $username));
         $result = $stmt->fetch();
         $stmt->closeCursor();
         return $result;
     }
     
-    public function getUserChannels($user)
+    public function getUserChannels($userid)
     {
         $chans = array();
         $stmt = $this->db->prepare('SELECT `channel`, `permissions` FROM `user_channels` WHERE `user` = ?;');
-        $stmt->execute(array($user));
+        $stmt->execute(array($userid));
         while ($res = $stmt->fetch()) {
             $chans[$res['channel']] = $res['permissions'];
         }
         $stmt->closeCursor();
         return $chans;
+    }
+    
+    public function getOfflineMessages(User $user, $limit = 30)
+    {
+        $result = array();
+        $stmt = $this->db->prepare('
+            SELECT `users`.`name` AS `from`, `message`, `date`
+            FROM `events`
+            INNER JOIN `users` ON `users`.`id` = `userid`
+            WHERE `type` = ? AND `to` = ?
+            LIMIT ?;');
+        $stmt->execute(array('message', $user->getName(), PHP_MAX_INT));
+        $result[$user->getName()] = $stmt->fetchAll();
+        $stmt->closeCursor();
+        foreach($user->getChannels() as $chan) {
+            $stmt->execute(array('message', $chan->getName(), $limit));
+            $result[$chan->getName()] = $stmt->fetchAll();
+            $stmt->closeCursor();
+        }
+        return $result;
     }
 }
