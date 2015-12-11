@@ -55,7 +55,7 @@ class Database
             INNER JOIN `users` ON `users`.`id` = `userid`
             WHERE `type` = ? AND `to` = ?
             LIMIT ?;');
-        $stmt->execute(array('message', $user->getName(), PHP_MAX_INT));
+        $stmt->execute(array('message', $user->getName(), PHP_INT_MAX));
         $result[$user->getName()] = $stmt->fetchAll();
         $stmt->closeCursor();
         foreach($user->getChannels() as $chan) {

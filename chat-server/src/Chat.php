@@ -99,7 +99,7 @@ class Chat implements MessageComponentInterface
                     $client->send([
                         'type' => 'rmessage',
                         'success' => false,
-                        'message' => $message
+                        'message' => $error
                     ]);
                     return;
                 }

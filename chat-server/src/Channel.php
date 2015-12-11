@@ -5,7 +5,7 @@ namespace IRCClone\Channel;
 use IRCClone\Chat;
 use IRCClone\User;
 
-class Channel implements ChannelInterface
+class Channel
 {
     private $chat;
     private $users;

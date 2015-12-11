@@ -3,7 +3,7 @@
 namespace IRCClone\Connection;
 
 use IRCClone\Chat;
-use IRCClone\User\User;
+use IRCClone\User;
 use Ratchet\ConnectionInterface;
 
 class ChatConnection implements ChatConnectionInterface

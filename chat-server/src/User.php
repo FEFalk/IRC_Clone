@@ -1,12 +1,12 @@
 <?php
 
-namespace IRCClone\User;
+namespace IRCClone;
 
 use IRCClone\Chat;
 use IRCClone\Connection\ChatConnection;
 use IRCClone\Channel;
 
-class User implements UserInterface
+class User
 {
     private $connection;
     private $chat;
