@@ -36,19 +36,20 @@
                         <p class="lead">There are many chats<br> But this one is mine. Such cool chat, <br> now meme free! Try it out!</p>
                 </div>
             <div class="col-md-2 col-md-offset-1" id="grey-text">        
-                    <form action="get" class="form-horizontal">
+                    <form method="post" class="form-horizontal" id="login-form">
                         <div class="form-group">
-                            <label for="username_input"> Username </label>
+                            <label for="username_input" id="username-label"> Username </label>
                             <br>
                             <input class="form-control" type="text" name="username" id="username">
                         </div>
                         <div class="form-group">
-                            <label for="password_input"> Password </label>
+                            <label for="password_input" id="password-label"> Password </label>
                             <br>
-                            <input class="form-control" type="text" name="password" id="password">
+                            <input class="form-control" type="password" name="password" id="password">
                         </div>
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-default">Submit</button>
+                        <div class="form-group" id="submit-group">
+                            <button type="submit" class="btn btn-default" id="submit">Submit</button>
+                            <span><strong  class="leader" id="register">Register</strong></span>
                         </div>
                     </form>
                 </div>
