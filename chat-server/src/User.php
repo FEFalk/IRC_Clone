@@ -46,6 +46,7 @@ class User
     
     public function joinChannel(Channel $chan, $permissions)
     {
+        $chan->addUser($this, $permissions);
         $this->channels->attach((object) array('chan' => $chan, 'permissions' => $permissions));
     }
     

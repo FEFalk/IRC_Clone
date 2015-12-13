@@ -31,6 +31,7 @@ class ChatConnection implements ChatConnectionInterface
     
     public function login($username, $password)
     {
+        // Already logged in?
         if ($this->user)
             return;
         
@@ -47,13 +48,16 @@ class ChatConnection implements ChatConnectionInterface
         $userinfo['channels'] = $chans;
         unset($userinfo['password']);
         
-        // Create user object
+        // Create User object
         $this->user = new User($userinfo, $this, $this->chat);
         return $this->user;
     }
     
     public function logout()
     {
+        if (!$this->user)
+            return;
+        
         foreach($this->getUser()->getChannels() as $chan) {
             // Send logout to channel users
             $chan->send([

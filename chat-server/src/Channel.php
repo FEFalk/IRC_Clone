@@ -1,6 +1,6 @@
 <?php
 
-namespace IRCClone\Channel;
+namespace IRCClone;
 
 use IRCClone\Chat;
 use IRCClone\User;
@@ -23,9 +23,13 @@ class Channel
         $this->users = new \SplObjectStorage;
     }
     
-    // Broadcast to active users
+    /*
+     * Send message to all users in the channel
+     * @param array $msg The event-based message array
+     */
     public function send(array $msg)
     {
+        // TODO: Add message to database
         $msg['to'] = $this->name;
         foreach($this->users as $user)
         {
@@ -33,19 +37,96 @@ class Channel
         }
     }
     
-    public function addUser(User $user)
+    /*
+     * Get the usercount of the channel
+     * @return int Usercount
+     */
+    public function getUserCount()
     {
-        $this->users->attach($user);
+        return $this->users->count();
     }
     
+    /*
+     * Check if a user has permissions
+     * @param User $user The user
+     * @param int $permissions Permissions
+     * @return boolean True if the user has provided permissions
+     */
+    public function userHasPermissions(User $user, $permissions)
+    {
+        foreach($this->users as $u)
+        {
+            if ($u->user === $user)
+                return $u->permissions & $permissions;
+        }
+        return false;
+    }
+    
+    /*
+     * Add user to channel
+     * @param User $user The user
+     * @param int $permissions User permissions
+     */
+    public function addUser(User $user, $permissions)
+    {
+        $this->users->attach((object) array('user' => $user, 'permissions' => $permissions));
+    }
+    
+    /*
+     * Set a users permissions
+     * @param User $user The user
+     * @param int $permissions User permissions
+     */
+    public function setUserPermissions(User $user, $permissions)
+    {
+        foreach($this->users as $u) {
+            if ($u->user === $user) {
+                $u->permissions = $permissions;
+                return;
+            }
+        }
+    }
+    
+    /*
+     * Get a users permissions
+     * @param User $user The user
+     * @param int $permissions User permissions
+     */
+    public function getUserPermissions(User $user)
+    {
+        foreach($this->users as $u) {
+            if ($u->user === $user)
+                return $u->permissions;
+        }
+        return 0;
+    }
+    
+    /*
+     * Remove a user from the channel
+     * @param User $user The user
+     */
     public function removeUser(User $user)
     {
-        $this->users->detach($user);
+        foreach($this->users as $u) {
+            if ($u->user === $user) {
+                $this->users->detach($u);
+                return;
+            }
+        }
     }
     
+    /*
+     * Check if a user is in a channel
+     * @param User $user The user
+     * @return boolean True if the user is in the channel
+     */
     public function hasUser(User $user)
     {
-        return $this->users->contains($user);
+        foreach($this->users as $u) {
+            if ($u->user === $user)
+                return true;
+        }
+        return false;
     }
     
     public function getName()
@@ -63,7 +144,7 @@ class Channel
         $this->topic = $topic;
     }
     
-    public function isPassword()
+    public function hasPassword()
     {
         return !!$this->password;
     }
@@ -96,5 +177,15 @@ class Channel
     public function hasMode($flag)
     {
         return $this->modes & $flag;
+    }
+    
+    public function getUserLimit()
+    {
+        return $this->userlimit;
+    }
+    
+    public function setUserLimit($limit)
+    {
+        $this->userlimit = $limit;
     }
 }
