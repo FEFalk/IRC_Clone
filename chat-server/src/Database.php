@@ -67,6 +67,23 @@ class Database
     }
     
     /**
+     * Get an array of all users in a channel, active or inactive
+     * @param string $channel Channel name
+     * @return array List of users
+     */
+    public function getChannelUsers($channel)
+    {
+        $users = array();
+        $stmt = $this->db->prepare('SELECT `users`.`name`, `user_channels`.`permissions` FROM `user_channels` INNER JOIN `users` ON `user_channels`.`user` = `users`.`id` WHERE `channel` = ?;');
+        $stmt->execute(array($channel));
+        while ($res = $stmt->fetch()) {
+            $users[$res['name']] = array('permissions' => $res['permissions'], 'active' => false);
+        }
+        $stmt->closeCursor();
+        return $users;
+    }
+    
+    /**
      * Get offline messages of a user
      * @param User $user The user
      * @param int $limit Number of messages to fetch from each channel
@@ -125,7 +142,7 @@ class Database
      */
     public function getChannelInfo($chan)
     {
-        $stmt = $this->db->prepare('SELECT `name`, `modes`, `topic`, `password`, `ùserlimit` FROM `channels` WHERE `name` = ? LIMIT 1;');
+        $stmt = $this->db->prepare('SELECT `name`, `modes`, `topic`, `password`, `userlimit` FROM `channels` WHERE `name` = ? LIMIT 1;');
         $stmt->execute(array($chan));
         $chan = $stmt->fetch();
         $stmt->closeCursor();

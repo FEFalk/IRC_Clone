@@ -33,7 +33,7 @@ class Channel
         $msg['to'] = $this->name;
         foreach($this->users as $user)
         {
-            $user->send($msg);
+            $user->user->send($msg);
         }
     }
     
@@ -127,6 +127,19 @@ class Channel
                 return true;
         }
         return false;
+    }
+    
+    /**
+     * Get an array of active users in the channel
+     * @return array name => permissions
+     */
+    public function getUsers()
+    {
+        $users = array();
+        foreach($this->users as $u) {
+            $users[$u->user->getName()] = $u->permissions;
+        }
+        return $users;
     }
     
     public function getName()
