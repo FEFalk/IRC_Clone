@@ -110,7 +110,7 @@ class Chat implements MessageComponentInterface
             $client->send([
                 'type' => 'rlogin',
                 'success' => false,
-                'message' => ErrorCodes::ALREADY_LOGGEDIN
+                'message' => ErrorCodes::LOGIN_ALREADY_LOGGEDIN
             ]);
             return false;
         }

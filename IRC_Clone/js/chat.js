@@ -1,47 +1,46 @@
 $(function() {
-
-    /*Makes the Register/login in form Toggable*/
-	$('#register').clickToggle(function() {
-			$('<div class="form-group" id="email-group">'+
-                '<label for="username_input" id="email-label"> Email </label>'+
-                '<br><input class="form-control" type="text" name="email" id="email" placeholder="optional">'+
-            '</div>').insertBefore($('#submit-group'));
-            $('#register').text('Back to login');
-		}, function() {
-            $('#email-group').remove();
-            $('#register').text('Register');
+    // Show alert (alert-id, alert-text-id, message)
+    var showAlert = function(id, txtid, msg) {
+        $(id).removeClass('hidden');
+        $(txtid).text(msg);
+    };
+    
+    // Alert close button
+    $('.alertclose').click(function() {
+        $(this).parent().addClass('hidden');
     });
-
-    $('#login-form').submit(function(event) {
-        var data = {
-            'username' : $('#username').val(),
-            'password' : $('#password').val(),
-            'email' : $('#email').val()
-        };
-
-        var form = $(this);
-        var inputs = form.find("input, select");
-
-        //seralize:s it, which will make it easier for the PHP code
-        var serializedData = form.serialize();
-
-        //disable inputs
-        inputs.prop('disabled',true);
+    
+    $('#chat-input').autoresize();
+    
+    // Register form
+    $('#register-form-submit').click(function(event) {
+        event.preventDefault();
+        
+        var inputs = $(this).find("input, select");
+        inputs.prop('disabled', true);
+        
+        var formdata = $('#register-form').serialize();
+        // TODO: Validate formdata
 
         $.ajax({
             method: 'POST',
             url: 'register.php',
             dataType: 'json',
-            data: serializedData
+            data: formdata
         })
         .done(function(response) {
-            console.log(response);
+            inputs.prop('disabled', false);
+            if (response.success) {
+                $('registerModal').modal('hide');
+            }
+            else {
+                showAlert('#reg-alert', '#reg-txt-alert', 'Unable to register: ' + response.message);
+            }
         })
         .fail(function(msg) {
-            console.log(msg);
+            inputs.prop('disabled', false);
         });
     });
-
 });
 
 /*Creates the clickToggle function*/

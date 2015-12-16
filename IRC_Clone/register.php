@@ -1,37 +1,38 @@
 <?php
-$ip = 'localhost';
-$database = 'ircclone';
-$username = 'root';
-$password = '';
+require 'include/database.php';
 
-/*FOR TESTING ONLY*/
-/*$_POST['username'] = 'alvinGrande';
-$_POST['password'] = 'qwe';*/
+// Set content type for JSON callback
+header("Content-type:application/json");
 
 if(isset($_POST['username']) && isset($_POST['password'])) {
-	$user = strtolower($_POST['username']);
-	$pass = $_POST['password'];
+    $cfg = require 'config.php';
+    $db = new Database($cfg['db_ip'], $cfg['db_database'], $cfg['db_username'], $cfg['db_password']);
+    $db->connect();
+    
+    // Allow null emails?
 	$email = isset($_POST['email']) ? $_POST['email'] : null;
+    
+    // Check if username is valid
+    if (!preg_match('/\A[a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]{2,15}\z/i', $_POST['username'])) {
+        echo json_encode(['success' => false, 'message' => 'invalid_format']);
+        return;
+    }
 
-	$connstring = 'mysql:host='. $ip .';dbname='. $database .';';
-	$db = new PDO($connstring, $username, $password,
-	array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''));
-
-	//$user = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_SPECIAL_CHARS);
-	$stmt = $db->prepare('SELECT name FROM users WHERE name = ?');
-	$stmt->execute(array($user));
-
-	if($stmt->rowCount() > 0) {
-        echo "user exists";
+    // Check if username already exists
+	$userinfo = $db->getUserInfo($_POST['username']);
+    
+	if($userinfo) {
+        echo json_encode(['success' => false, 'message' => 'user_exists']);
     } 
     else {
-        $stmt = $db->prepare('INSERT INTO users(name,password,email,permissions) VALUES(?,?,?,?);');
-        $stmt->execute(array($user,$pass,$email,0));
-        echo 'added!';
+        if ($db->registerUser($_POST['username'], password_hash($_POST['password'], PASSWORD_BCRYPT), $email))
+            echo json_encode(['success' => true]);
+        else
+            echo json_encode(['success' => false, 'message' => 'unknown_error']);
     }
 
 } else {
-	echo 'username/password cant be empty!';
+	echo json_encode(['success' => false, 'message' => 'no_input']);
 }
 
 ?>	
