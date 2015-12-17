@@ -50,6 +50,10 @@ class ChatConnection implements ChatConnectionInterface
         
         // Create User object
         $this->user = new User($userinfo, $this, $this->chat);
+        
+        // Join default channel if empty
+        if (count($chans) == 0)
+            $this->user->joinChannel($this->chat->getChannelByName('#Default'), 0);
         return $this->user;
     }
     
@@ -58,9 +62,9 @@ class ChatConnection implements ChatConnectionInterface
         if (!$this->user)
             return;
         
-        foreach($this->getUser()->getChannels() as $chan) {
+        /*foreach($this->getUser()->getChannels() as $chan) {
             // Send logout to channel users
-            $chan->send([
+            $chan->chan->send([
                     'type' => 'offline',
                     'from' => $this->name,
                     'message' => null
@@ -68,7 +72,7 @@ class ChatConnection implements ChatConnectionInterface
                 
             // Remove user from active users in channel
             $chan->removeUser($this->getUser());
-        }
+        }*/
     }
 
     public function setName($name, $bot = false)

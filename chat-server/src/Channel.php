@@ -174,7 +174,7 @@ class Channel
     
     public function getModes()
     {
-        return $this->modes;
+        return $this->modes ? $this->modes : 0;
     }
     
     public function addMode($flag)

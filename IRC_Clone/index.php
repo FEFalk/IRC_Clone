@@ -26,10 +26,10 @@
                 </ul>
                 <form id="login-form" class="navbar-form navbar-right">
                     <div class="form-group">
-                        <input type="text" placeholder="Username or Email" class="form-control">
+                        <input id="login-username" type="text" placeholder="Username or Email" class="form-control">
                     </div>
                     <div class="form-group">
-                        <input type="password" placeholder="Password" class="form-control">
+                        <input id="login-password" type="password" placeholder="Password" class="form-control">
                     </div>
                     <div class="form-group hidden"></div>
                     <button type="submit" class="btn btn-success">Sign in</button>
@@ -39,40 +39,21 @@
         </div>
     </nav>
     
-    
     <div class="top-buffer container-fluid row-fluid row-no-padding" id="content">
-            <div class="alert alert-danger alert-dismissible hidden" id="alert" role="alert"><button type="button" class="close alertclose" aria-label="Close"><span aria-hidden="true">&times;</span></button><span id="txtAlert">Wow big alert warning warning hello</span></div>
-            <div class="col-md-2 panel btn-group-vertical nav" role="group" aria-label="channels" id="channel-list">
-                <button type="button" class="btn btn-primary active">#Default<span class="badge">4</span></button>
-                <button type="button" class="btn btn-primary">#CoolChan<span class="badge"></span></button>
+        <div class="alert alert-danger alert-dismissible hidden" id="alert" role="alert"><button type="button" class="close alertclose" aria-label="Close"><span aria-hidden="true">&times;</span></button><span id="txtAlert">Wow big alert warning warning hello</span></div>
+        <div class="col-md-2 panel btn-group-vertical nav" role="group" aria-label="channels" id="channel-list">
+        </div>
+        <div class="col-md-8 panel panel-default" style="background-color: #FFFFFF;" id="chat-frame">  
+            <div id="channel-container">
             </div>
-            <div class="col-md-8 panel panel-default" style="background-color: #FFFFFF;" id="chat-frame">     
-                <div class="panel-heading">
-                    <span class="label label-primary">#Default</span>
-                    <span class="label label-danger">[10/10]</span>
-                    <abbr title="[m]oderated [p]rivate" class="label label-warning">[+mp]</abbr>
-                    <span class="label label-info">This is a cool topic. I like cool topics. Do you like cool topics?</span>
-                </div>
-                <div class="panel-body container-fluid" id="chat">
-                    <div class="row"><strong class="col-md-2"><a href="" class="text-danger">@Coolest|Person</a></strong><span class="col-md-10">There are many chats. But this one is mine. Such cool chat, now meme free! Try it out!</span></div>
-                    <div class="row"><strong class="col-md-2"><a href="" class="text-success">+CoolPerson</a></strong><span class="col-md-10">There once was a man named Sean, he loved trees a lot.</span></div>
-                    <div class="row"><strong class="col-md-2"><a href="" class="text-danger">@Coolest|Person</a></strong><span class="col-md-10">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus eu massa dictum orci vehicula dapibus ut vel lectus. Morbi suscipit ipsum at metus rutrum cursus. Etiam interdum ex at risus pretium, sit amet vehicula sapien faucibus. Suspendisse eget sed.</span></div>
-                    <div class="row"><strong class="col-md-2"><a href="">UncoolPerson</a></strong><span class="col-md-10">Shut up :(</span></div>
-                </div>
-                <div class="panel-footer input-group">
-                    <span class="input-group-addon" id="basic-addon1">></span>
-                    <textarea maxlength="255" rows="1" class="form-control" id="chat-input" type="text" placeholder="" autocomplete="off"></textarea>
-                    <span class="input-group-addon btn btn-success" id="basic-addon2">Send</span>
-                </div>
+            <div class="panel-footer input-group">
+                <span class="input-group-addon" id="basic-addon1">></span>
+                <textarea maxlength="255" rows="1" class="form-control" id="chat-input" type="text" placeholder="" autocomplete="off"></textarea>
+                <span class="input-group-addon btn btn-success" id="basic-addon2">Send</span>
             </div>
-            <ul class="col-md-2 panel nav nav-pulls nav-stacked" role="tablist" id="user-list">
-                <li role="presentation"><a href="#" class="text-danger">@Coolest|Person</a></li>
-                <li role="presentation"><a href="#" class="text-danger">@CoolPerson</a></li>
-                <li role="presentation"><a href="#" class="text-success">+CoolPerson</a></li>
-                <li role="presentation"><a href="#">UncoolPerson</a></li>
-                <li></li>
-                <li role="presentation"><a href="#" class="text-muted">OfflineUser</a></li>
-            </ul>
+        </div>
+        <ul class="col-md-2 panel nav nav-pulls nav-stacked" role="tablist" id="user-list">
+        </ul>
     </div>
     
     <!-- Registration -->
@@ -105,5 +86,16 @@
         </div>
     </div>
     
+    <!-- Chat channel template -->
+    <div class="channel-item hidden" data-channel="">
+        <div class="panel-heading">
+            <span class="label label-primary" data-type="name"></span>
+            <span class="label label-danger" data-type="users"></span>
+            <abbr title="" class="label label-warning" data-type="modes"></abbr>
+            <span class="label label-info" data-type="topic"></span>
+        </div>
+        <div class="panel-body container-fluid chat" data-type="chat">
+        </div>
+    </div>
 </body>
 </html>

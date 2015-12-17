@@ -127,6 +127,17 @@ class Chat implements MessageComponentInterface
             return false;
         }
         
+        $chans = $client->getUser()->getChannels();
+        foreach($chans as $channame => $arr) {
+            // Get all users from database
+            $chans[$channame]['users'] = $this->db->getChannelUsers($channame);
+            // Get active users
+            foreach($arr['chan']->getUsers() as $u => $p) {
+                $chans[$channame]['users'][$u] = true;
+            }
+            unset($chans[$channame]['chan']);
+        }
+        
         // Send success string to client
         $client->send([
             'type' => 'rlogin',
@@ -134,7 +145,7 @@ class Chat implements MessageComponentInterface
             'message' => [
                 'name' => $client->getUser()->getName(),
                 'permissions' => $client->getUser()->getPermissions(),
-                'channels' => $client->getUser()->getChannels()
+                'channels' => $chans
             ]
         ]);
         
@@ -176,11 +187,13 @@ class Chat implements MessageComponentInterface
                 return false;
             }
             
+            $message = htmlspecialchars($obj->message);
+            
             // Send message to channel
             $chan->send([
                 'type' => 'message',
                 'from' => $client->getUser()->getName(),
-                'message' => $obj->message
+                'message' => $message
             ]);
         }
         // User
@@ -224,26 +237,7 @@ class Chat implements MessageComponentInterface
     
     public function parseJoin($client, $obj)
     {
-        $chan = $this->getChannelByName($obj->message->chan);
-        if (!$chan) {
-            // Channel does not exist or has currently no active users (destructed)
-            $ch = $this->db->getChannelInfo($obj->message->chan);
-            if (!$ch) {
-                // Channel does not exist, create it
-                if ($this->db->createChannel($obj->message->chan))
-                    $chan = new Channel($obj->message->chan, $this);
-                else
-                    $error = ErrorCodes::UNKNOWN_ERROR;
-            }
-            else {
-                // Channel exists but is destructed
-                $chan = new Channel($ch['name'], $this);
-                $chan->setTopic($ch['topic']);
-                $chan->addMode($ch['modes']);
-                $chan->setUserLimit($ch['userlimit']);
-                $chan->setPassword($ch['password']);
-            }
-        }
+        $chan = $this->getChannelOrCreate($obj->message->chan);
         
         // Check password and user limit if user is not a server operator
         if ($chan && !$client->getUser()->hasPermission(Permissions::SERVER_OPERATOR)) {
@@ -314,7 +308,7 @@ class Chat implements MessageComponentInterface
     }
     
     // Get client by Connection
-    private function getClient(ConnectionInterface $conn)
+    public function getClient(ConnectionInterface $conn)
     {
         foreach($this->clients as $client) {
             if ($client->getConnection() === $conn) {
@@ -324,7 +318,7 @@ class Chat implements MessageComponentInterface
         return null;
     }
     
-    private function getClientByName($name)
+    public function getClientByName($name)
     {
         foreach($this->clients as $client) {
             if ($client->getUser() && strtolower($client->getUser()->getName()) === strtolower($name)) {
@@ -334,7 +328,7 @@ class Chat implements MessageComponentInterface
         return null;
     }
     
-    private function getChannelByName($name)
+    public function getChannelByName($name)
     {
         foreach($this->channels as $chan) {
             if (strtolower($chan->getName()) === strtolower($name)) {
@@ -342,5 +336,29 @@ class Chat implements MessageComponentInterface
             }
         }
         return null;
+    }
+
+    public function getChannelOrCreate($name)
+    {
+        $chan = $this->getChannelByName($name);
+        if (!$chan) {
+            // Channel does not exist or has currently no active users (destructed)
+            $ch = $this->db->getChannelInfo($name);
+            if (!$ch) {
+                // Channel does not exist, create it
+                if (!$this->db->createChannel($name))
+                    return null;
+                $chan = new Channel($name, $this);
+            }
+            else {
+                // Channel exists but is destructed
+                $chan = new Channel($ch['name'], $this);
+                $chan->setTopic($ch['topic']);
+                $chan->addMode($ch['modes']);
+                $chan->setUserLimit($ch['userlimit']);
+                $chan->setPassword($ch['password']);
+            }
+        }
+        return $chan;
     }
 }

@@ -28,6 +28,10 @@ class User
         $this->name = $userinfo['name'];
         $this->email = $userinfo['email'];
         $this->permissions = $userinfo['permissions'];
+        
+        foreach($userinfo['channels'] as $c => $p) {
+            $this->joinChannel($this->chat->getChannelOrCreate($c), $p);
+        }
     }
     
     // Broadcast to user channels
@@ -69,9 +73,19 @@ class User
         return false;
     }
     
-    public function getChannels()
+    public function getChannels($name_only = false)
     {
-        return $this->channels;
+        $chans = array();
+        foreach($this->channels as $ch) {
+            $chans[$ch->chan->getName()] = array(
+                'permissions' => $ch->permissions,
+                'modes' => $ch->chan->getModes(),
+                'topic' => $ch->chan->getTopic());
+                
+            if (!$name_only)
+                $chans[$ch->chan->getName()]['chan'] = $ch->chan;
+        }
+        return $chans;
     }
     
     public function getUserId()

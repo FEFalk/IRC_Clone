@@ -26,21 +26,29 @@ body {
     resize: none;
 }
 
-#chat {
+.chat {
     overflow-y: scroll;
-    height: 90%;
+    height: 100%;
 }
 
-#chat div {
+#channel-container {
+    height: 100%;
+}
+
+.channel-item {
+    height: 100%;
+}
+
+.row {
     padding-top: 10px;
 }
 
-#chat strong, #user-list li {
+#chat-frame strong, #user-list li {
     padding: 0 !important;
     margin: 0 !important;
 }
 
-#chat .row {
+#channel-container .row {
     border-bottom: 1px solid #ccc;
 }
 

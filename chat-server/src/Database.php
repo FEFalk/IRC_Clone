@@ -101,9 +101,9 @@ class Database
         $stmt->execute(array('message', $user->getName(), PHP_INT_MAX));
         $result[$user->getName()] = $stmt->fetchAll();
         $stmt->closeCursor();
-        foreach($user->getChannels() as $chan) {
-            $stmt->execute(array('message', $chan->getName(), $limit));
-            $result[$chan->getName()] = $stmt->fetchAll();
+        foreach($user->getChannels() as $name => $arr) {
+            $stmt->execute(array('message', $name, $limit));
+            $result[$name] = $stmt->fetchAll();
             $stmt->closeCursor();
         }
         return $result;
