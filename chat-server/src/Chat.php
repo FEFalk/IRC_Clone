@@ -11,6 +11,7 @@ class Chat implements MessageComponentInterface
 {
     private $clients;
     private $channels;
+    private $defaultchan;
     public $db;
 
     public function __construct($db)
@@ -20,10 +21,10 @@ class Chat implements MessageComponentInterface
         $this->db = $db;
         
         // Initialise the default channel
-        $defaultchan = new Channel("#Default", $this);
-        $defaultchan->setTopic('Welcome to the Default channel! Type /help for help with the chat.');
-        $this->channels->attach($defaultchan);
-        echo "Created default channel {$defaultchan->getName()}\n";
+        $this->defaultchan = new Channel("#Default", $this);
+        $this->defaultchan->setTopic('Welcome to the Default channel! Type /help for help with the chat.');
+        $this->channels->attach($this->defaultchan);
+        echo "Created default channel {$this->defaultchan->getName()}\n";
     }
 
     public function onOpen(ConnectionInterface $conn)
@@ -106,6 +107,7 @@ class Chat implements MessageComponentInterface
     
     public function parseLogin($client, $obj)
     {
+        // If client is already logged in. Might want to allow multiple logins?
         if ($this->getClientByName($obj->message->username)) {
             $client->send([
                 'type' => 'rlogin',
@@ -232,12 +234,22 @@ class Chat implements MessageComponentInterface
     
     public function parseQuit($client, $obj)
     {
-        // Do we need this?
+        $client->logout($obj->message);
+        $this->onClose($client->getConnection());
+        return true;
     }
     
     public function parseJoin($client, $obj)
     {
-        $chan = $this->getChannelOrCreate($obj->message->chan);
+        $chan = null;
+        if (!preg_match('/^([#][^\x07\x2C\s]{0,16})$/', $obj->message->chan)) {
+            $error = ErrorCodes::CHANNEL_NAME_FORMAT;
+        }
+        else {
+            $chan = $this->getChannelOrCreate($obj->message->chan);
+            if (!$chan)
+                $error = ErrorCodes::UNKNOWN_ERROR;
+        }
         
         // Check password and user limit if user is not a server operator
         if ($chan && !$client->getUser()->hasPermission(Permissions::SERVER_OPERATOR)) {
@@ -295,10 +307,13 @@ class Chat implements MessageComponentInterface
         
         $client = $this->getClient($conn);
         if ($client) {
-            $client->logout();
+            $client->logout('User disconnected');
         }
         
-        $this->clients->detach($conn);
+        foreach($this->clients as $client) {
+            if ($client->getConnection() === $conn)
+                $this->clients->detach($client);
+        }
     }
 
     public function onError(ConnectionInterface $conn, \Exception $e) {
@@ -331,6 +346,7 @@ class Chat implements MessageComponentInterface
     public function getChannelByName($name)
     {
         foreach($this->channels as $chan) {
+            echo $chan->getName() . " [chan]\n";
             if (strtolower($chan->getName()) === strtolower($name)) {
                 return $chan;
             }
@@ -358,7 +374,14 @@ class Chat implements MessageComponentInterface
                 $chan->setUserLimit($ch['userlimit']);
                 $chan->setPassword($ch['password']);
             }
+            
+            $this->channels->attach($chan);
         }
         return $chan;
+    }
+    
+    public function getDefaultChannel()
+    {
+        return $this->defaultchan;
     }
 }

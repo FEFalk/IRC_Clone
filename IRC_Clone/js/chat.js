@@ -12,6 +12,10 @@ $(function() {
 
             conn.onmessage = this.onMessage;
             
+            conn.onclose = function(e) {
+                Chat.addMessage('', 'SERVER', 'Connection to server closed!');
+            };
+            
             return conn;
         },
         
@@ -22,6 +26,10 @@ $(function() {
         
         onMessage: function(e) {
             var data = JSON.parse(e.data);
+            if (data.success != null && data.success == false) {
+                console.log("Failed: " + e.data);
+                return;
+            }
             if (data.type == "rlogin") {
                 if (data.success == true) {
                     console.log("Success!\n");
@@ -36,6 +44,13 @@ $(function() {
                 else {
                     console.log("Failed: " + data.message + ".\n");
                 }
+            }
+            else if (data.type == "rjoin") {
+                Chat.addChannel(data.message.name);
+                Chat.setChannelTopic(data.message.name, data.message.topic);
+                Chat.setChannelModes(data.message.name, data.message.modes);
+                Chat.setUserList(data.message.name, data.message.users);
+                $('#channel-list button[data-channel="' + data.message.name + '"]').click();
             }
             else if (data.type == "message") {
                 Chat.addMessage(data.to, data.from, data.message);
@@ -82,14 +97,22 @@ $(function() {
         },
         
         addMessage: function(chan, user, message) {
-            var chandiv = $('.channel-item[data-channel="' + chan + '"]');
+            var chandiv;
+            if (chan == '')
+                chandiv = $('.channel-item:not(.hidden)');
+            else
+                chandiv = $('.channel-item[data-channel="' + chan + '"]');
             var chanlistitem = $('#channel-list > button[data-channel="'+chan+'"]');
+            var msg = $('<div class="row"><strong class="col-md-2"><a href="" class="text-danger">' + user + '</a></strong><span class="col-md-10">' + message + '</span></div>');
+            msg.appendTo($('div[data-type="chat"]', chandiv));
+            
             if (chandiv.hasClass('hidden')) {
                 $('span', chanlistitem).text(parseInt(($('span', chanlistitem).text()) || 0) + 1);
             }
-            var msg = $('<div class="row"><strong class="col-md-2"><a href="" class="text-danger">' + user + '</a></strong><span class="col-md-10">' + message + '</span></div>');
-            msg.appendTo($('div[data-type="chat"]', chandiv));
-            $('.channel-item:not(.hidden) div.chat').scrollTop($('.channel-item:not(.hidden)')[0].scrollHeight);
+            else {
+                var chatdiv = $('div.chat', chandiv)[0];
+                chatdiv.scrollTop(chatdiv.scrollHeight);
+            }
         }
     };
     
@@ -119,6 +142,7 @@ $(function() {
                 color = 'text-muted';
             $('#user-list').append('<li role="presentation"><a href="#" class="'+ color +'">' + name + '</a></li>');
         });
+        $('#channel-list button[data-channel="' + channel + '"]').addClass('active').siblings().removeClass('active');
     });
     
     // Alert close button
@@ -128,9 +152,28 @@ $(function() {
     
     // Send message
     var sendMessage = function() {
-        var activechan = $('.channel-item:not(.hidden)').attr('data-channel');
         var msg = $('#chat-input').val();
-        chat.send(JSON.stringify({type: 'message', to: activechan, message: msg}));
+        
+        // If message is a command
+        if (msg.charAt(0) == '/') {
+            var split = msg.split(' ');
+            var cmd = split[0].substr(1),
+                arg = split.length > 1 ? split[1] : ''
+                msg = split.length > 2 ? split.splice(2).join(' ') : '';
+            
+            console.log('/' + cmd + ': ' + arg + ' - ' + msg);
+            
+            if (cmd == 'join') {
+                chat.send(JSON.stringify({type: 'join', message: {chan: arg, password: msg}}));
+            } else if (cmd == 'quit') {
+                chat.send(JSON.stringify({type: 'quit', message: arg}));
+                chat.close();
+            }
+        }
+        else {
+            var activechan = $('.channel-item:not(.hidden)').attr('data-channel');
+            chat.send(JSON.stringify({type: 'message', to: activechan, message: msg}));
+        }
         $('#chat-input').val('');
     };
     $('#basic-addon2').on('click', function() {

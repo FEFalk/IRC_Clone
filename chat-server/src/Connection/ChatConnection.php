@@ -52,27 +52,29 @@ class ChatConnection implements ChatConnectionInterface
         $this->user = new User($userinfo, $this, $this->chat);
         
         // Join default channel if empty
-        if (count($chans) == 0)
-            $this->user->joinChannel($this->chat->getChannelByName('#Default'), 0);
+        if (count($chans) == 0) {
+            $perms = $this->chat->db->getUserChannelPermissions($this->user->getName(), $this->chat->getDefaultChannel()->getName());
+            $this->user->joinChannel($this->chat->getDefaultChannel(), $perms);
+        }
         return $this->user;
     }
     
-    public function logout()
+    public function logout($msg)
     {
         if (!$this->user)
             return;
         
-        /*foreach($this->getUser()->getChannels() as $chan) {
+        foreach($this->user->getChannels() as $chan) {
             // Send logout to channel users
-            $chan->chan->send([
+            $chan['chan']->send([
                     'type' => 'offline',
-                    'from' => $this->name,
-                    'message' => null
+                    'from' => $this->user->getName(),
+                    'message' => $msg
                 ]);
                 
             // Remove user from active users in channel
-            $chan->removeUser($this->getUser());
-        }*/
+            $chan['chan']->removeUser($this->user);
+        }
     }
 
     public function setName($name, $bot = false)
