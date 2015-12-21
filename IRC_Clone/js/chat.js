@@ -4,7 +4,8 @@ $(function() {
     // Chat functionality
     var Chat = {
         login: function(username, password) {
-            var conn = new WebSocket('ws://localhost:8080');
+            var conn = new WebSocket('ws://' + window.location.hostname + ':8080');
+
             conn.onopen = function(e) {
                 console.log("Connection established!\nLogging in... ");
                 conn.send(JSON.stringify({type: 'login', message: {username: username, password: password}}));
@@ -55,6 +56,7 @@ $(function() {
             else if (data.type == "message") {
                 Chat.addMessage(data.to, data.from, data.message);
             }
+
             console.log(e.data);
         },
         
@@ -65,7 +67,7 @@ $(function() {
             var added = false;
             var btn = $('<button type="button" class="btn btn-primary" data-channel="' + name + '">' + name + '<span class="badge"></span></button>');
             $('#channel-list > button').each(function(i) {
-                if (name.toUpperCase() < $(this).text().toUpperCase()) {
+                if (name.toUpperCase() < $(this).text().toUpperCase()) { 
                     btn.insertBefore($(this));
                     added = true;
                     return false;
@@ -96,24 +98,30 @@ $(function() {
             active = typeof active !== 'undefined' ? active : false;
         },
         
-        addMessage: function(chan, user, message) {
-            var chandiv;
+      addMessage: function(chan, user, message) {
+            var chandiv, doscroll = false;
             if (chan == '')
                 chandiv = $('.channel-item:not(.hidden)');
             else
                 chandiv = $('.channel-item[data-channel="' + chan + '"]');
             var chanlistitem = $('#channel-list > button[data-channel="'+chan+'"]');
+            var chatitem = $('div.chat', chandiv);
+            if (chatitem[0].scrollHeight - chatitem.scrollTop() == chatitem.outerHeight())
+                doscroll = true;
+           
+            /*Parse it!*/
+            var foo = Chat.parseMessage(message);
+
             var msg = $('<div class="row"><strong class="col-md-2"><a href="" class="text-danger">' + user + '</a></strong><span class="col-md-10">' + message + '</span></div>');
-            msg.appendTo($('div[data-type="chat"]', chandiv));
-            
+            msg.appendTo(chatitem);
+           
             if (chandiv.hasClass('hidden')) {
                 $('span', chanlistitem).text(parseInt(($('span', chanlistitem).text()) || 0) + 1);
             }
-            else {
-                var chatdiv = $('div.chat', chandiv)[0];
-                chatdiv.scrollTop(chatdiv.scrollHeight);
+            else if (doscroll) {
+                chatitem.scrollTop(chatitem[0].scrollHeight);
             }
-        }
+        },
     };
     
     // Show alert (alert-id, alert-text-id, message)
@@ -142,6 +150,7 @@ $(function() {
                 color = 'text-muted';
             $('#user-list').append('<li role="presentation"><a href="#" class="'+ color +'">' + name + '</a></li>');
         });
+        $('#channel-list > button[data-channel="'+ channel +'"] span').text("");
         $('#channel-list button[data-channel="' + channel + '"]').addClass('active').siblings().removeClass('active');
     });
     
@@ -176,9 +185,11 @@ $(function() {
         }
         $('#chat-input').val('');
     };
+    
     $('#basic-addon2').on('click', function() {
         sendMessage();
     });
+
     $('#chat-input')
     .autoresize()
     .keypress(function (e) {
@@ -207,7 +218,7 @@ $(function() {
         .done(function(response) {
             inputs.prop('disabled', false);
             if (response.success) {
-                $('registerModal').modal('hide');
+                $('#registerModal').modal('hide');
             }
             else {
                 showAlert('#reg-alert', '#reg-txt-alert', 'Unable to register: ' + response.message);
@@ -216,5 +227,8 @@ $(function() {
         .fail(function(msg) {
             inputs.prop('disabled', false);
         });
+    });
+    $('#registerModal').on('hidden.bs.modal', function() { 
+        $('#register-form').trigger("reset");
     });
 });
