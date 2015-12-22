@@ -53,6 +53,9 @@ $(function() {
                 Chat.setUserList(data.message.name, data.message.users);
                 $('#channel-list button[data-channel="' + data.message.name + '"]').click();
             }
+            else if (data.type == "rtopic") {
+                Chat.setChannelTopic(data.message.chan, data.message.topic);
+            }
             else if (data.type == "message") {
                 Chat.addMessage(data.to, data.from, data.message);
             }
@@ -126,29 +129,27 @@ $(function() {
     
     /*Create a parseMessage object with all the functions in it?*/
     var parseMessage = function(text) {
-        checkForlinks(text);
+        return checkForlinks(text);  
     }
 
     /*adds href tags to links, check for http:// https:// or www*/
     var checkForlinks= function(text) {
-      var exp = /(\b(((https?|ftp|file|):\/\/)|www[.])[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
-      var temp = text.replace(exp,"<a href=\"$1\" target=\"_blank\">$1</a>");
-      var result = "";
-      while (temp.length > 0) {
+        var exp = /(\b(((https?|ftp|file|):\/\/)|www[.])[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+        var temp = text.replace(exp,"<a href=\"$1\">$1</a>");
+        var result = "";
+        while (temp.length > 0) {
           var pos = temp.indexOf("href=\"");
           if (pos == -1) {
               result += temp;
               break;
           }
           result += temp.substring(0, pos + 6);
-
           temp = temp.substring(pos + 6, temp.length);
           if ((temp.indexOf("://") > 8) || (temp.indexOf("://") == -1)) {
               result += "http://";
           }
-      }
-            console.log(result);
-            return result;
+        }
+        return result;
     }
 
     // Show alert (alert-id, alert-text-id, message)
@@ -189,7 +190,8 @@ $(function() {
     // Send message
     var sendMessage = function() {
         var msg = $('#chat-input').val();
-        
+        var activechan = $('.channel-item:not(.hidden)').attr('data-channel');
+
         // If message is a command
         if (msg.charAt(0) == '/') {
             var split = msg.split(' ');
@@ -204,10 +206,13 @@ $(function() {
             } else if (cmd == 'quit') {
                 chat.send(JSON.stringify({type: 'quit', message: arg}));
                 chat.close();
+            } else if (cmd == 'topic') {
+                //makes it possible to have space:s in the topic message
+                topic = arg.concat(" ").concat(msg);
+                chat.send(JSON.stringify({type: 'topic', message: {chan: activechan, topic: topic}}));
             }
         }
         else {
-            var activechan = $('.channel-item:not(.hidden)').attr('data-channel');
             chat.send(JSON.stringify({type: 'message', to: activechan, message: msg}));
         }
         $('#chat-input').val('');

@@ -91,6 +91,7 @@ class Chat implements MessageComponentInterface
         }
         else if ($obj->type === 'topic') {
             // TODO: Change channel topic
+            if($this->parseTopic($client, $obj));
         }
         else if ($obj->type === 'mode') {
             // TODO: Change user permissions in a channel
@@ -105,6 +106,42 @@ class Chat implements MessageComponentInterface
         // TODO: More events?
     }
     
+    /*Obj = message, and client = user*/
+    public function parseTopic($client, $obj) 
+    {
+        $chan = $this->getChannelByName($obj->message->chan);
+        if($chan)
+        {
+            //TODO permisson check
+            //if($chan->userHasPermissions($client->getUser(),Permissions::CHANNEL_OPERATOR) && $chan->userHasPermissions($client->getUser(),Permissions::SERVER_OPERATOR))
+            //{
+                $client->send([
+                    'type' => 'rtopic',
+                    'success' => true,
+                    'message' =>  [
+                        'chan' => $obj->message->chan,
+                        'topic' => $obj->message->topic
+                    ]
+                ]);
+           /* } 
+            else {
+                $client->send([
+                    'type' => 'rtopic',
+                    'success' => false,
+                    'message' =>  ErrorCodes::INSUFFICIENT_PERMISSION
+                ]);
+            }*/
+        }
+        else 
+        {
+                $client->send([
+                    'type' => 'rtopic',
+                    'success' => false,
+                    'message' =>  ErrorCodes::UNKNOWN_ERROR
+                ]);
+        }
+    }
+
     public function parseLogin($client, $obj)
     {
         // If client is already logged in. Might want to allow multiple logins?
@@ -284,7 +321,7 @@ class Chat implements MessageComponentInterface
         foreach($chan->getUsers() as $u => $p) {
             $users[$u]['active'] = true;
         }
-        
+
         // Send success string
         $client->send([
             'type' => 'rjoin',

@@ -15,4 +15,5 @@ abstract class ErrorCodes
     const CHANNEL_USERLIMIT_REACHED = 8;
     const CHANNEL_MODERATED         = 9;
     const CHANNEL_NAME_FORMAT       = 10;
+    const INSUFFICIENT_PERMISSION   = 11;
 }
