@@ -110,9 +110,9 @@ $(function() {
                 doscroll = true;
            
             /*Parse it!*/
-            var foo = Chat.parseMessage(message);
+            var msg = parseMessage(message);
 
-            var msg = $('<div class="row"><strong class="col-md-2"><a href="" class="text-danger">' + user + '</a></strong><span class="col-md-10">' + message + '</span></div>');
+            var msg = $('<div class="row"><strong class="col-md-2"><a href="" class="text-danger">' + user + '</a></strong><span class="col-md-10">' + msg + '</span></div>');
             msg.appendTo(chatitem);
            
             if (chandiv.hasClass('hidden')) {
@@ -121,9 +121,36 @@ $(function() {
             else if (doscroll) {
                 chatitem.scrollTop(chatitem[0].scrollHeight);
             }
-        },
+        }
     };
     
+    /*Create a parseMessage object with all the functions in it?*/
+    var parseMessage = function(text) {
+        checkForlinks(text);
+    }
+
+    /*adds href tags to links, check for http:// https:// or www*/
+    var checkForlinks= function(text) {
+      var exp = /(\b(((https?|ftp|file|):\/\/)|www[.])[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+      var temp = text.replace(exp,"<a href=\"$1\" target=\"_blank\">$1</a>");
+      var result = "";
+      while (temp.length > 0) {
+          var pos = temp.indexOf("href=\"");
+          if (pos == -1) {
+              result += temp;
+              break;
+          }
+          result += temp.substring(0, pos + 6);
+
+          temp = temp.substring(pos + 6, temp.length);
+          if ((temp.indexOf("://") > 8) || (temp.indexOf("://") == -1)) {
+              result += "http://";
+          }
+      }
+            console.log(result);
+            return result;
+    }
+
     // Show alert (alert-id, alert-text-id, message)
     var showAlert = function(id, txtid, msg) {
         $(id).removeClass('hidden');
@@ -218,6 +245,7 @@ $(function() {
         .done(function(response) {
             inputs.prop('disabled', false);
             if (response.success) {
+                console.log(response);
                 $('#registerModal').modal('hide');
             }
             else {
