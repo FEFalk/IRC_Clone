@@ -113,8 +113,8 @@ class Chat implements MessageComponentInterface
         if($chan)
         {
             //TODO permisson check
-            //if($chan->userHasPermissions($client->getUser(),Permissions::CHANNEL_OPERATOR) && $chan->userHasPermissions($client->getUser(),Permissions::SERVER_OPERATOR))
-            //{
+            if($chan->userHasPermissions($client->getUser(),Permissions::CHANNEL_OPERATOR) && $chan->userHasPermissions($client->getUser(),Permissions::SERVER_OPERATOR))
+            {
                 $client->send([
                     'type' => 'rtopic',
                     'success' => true,
@@ -123,14 +123,14 @@ class Chat implements MessageComponentInterface
                         'topic' => $obj->message->topic
                     ]
                 ]);
-           /* } 
+           } 
             else {
                 $client->send([
                     'type' => 'rtopic',
                     'success' => false,
                     'message' =>  ErrorCodes::INSUFFICIENT_PERMISSION
                 ]);
-            }*/
+            }
         }
         else 
         {
