@@ -106,14 +106,13 @@ class Chat implements MessageComponentInterface
         // TODO: More events?
     }
     
-    /*Obj = message, and client = user*/
     public function parseTopic($client, $obj) 
     {
         $chan = $this->getChannelByName($obj->message->chan);
         if($chan)
         {
             //TODO permisson check
-            if($chan->userHasPermissions($client->getUser(),Permissions::CHANNEL_OPERATOR) && $chan->userHasPermissions($client->getUser(),Permissions::SERVER_OPERATOR))
+            if($chan->userHasPermissions($client->getUser(),Permissions::CHANNEL_OPERATOR) || $chan->userHasPermissions($client->getUser(),Permissions::SERVER_OPERATOR))
             {
                 $client->send([
                     'type' => 'rtopic',
