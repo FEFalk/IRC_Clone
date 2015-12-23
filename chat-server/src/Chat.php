@@ -64,7 +64,7 @@ class Chat implements MessageComponentInterface
         // Messages
         if ($obj->type === 'message') {
             if ($this->parseMessage($client, $obj))
-                echo "{$client->getUser()->getName()} -> {$obj->to} ({$obj->message})}\n";
+                echo "{$client->getUser()->getName()} -> {$obj->to} ({$obj->message})\n";
             else
                 echo "Message failed\n";
         }
@@ -100,7 +100,7 @@ class Chat implements MessageComponentInterface
             if ($this->parseMode($client, $obj))
                 "{$client->getUser()->getName()} changed modes in {$obj->to} to {$obj->message}\n";
             else
-                "{$client->getUser()->getName()} unable to change topic in {$obj->to}\n";
+                "{$client->getUser()->getName()} unable to change modes in {$obj->to}\n";
         }
         else if ($obj->type === 'kick') {
             // TODO: Kick user from channel
@@ -315,7 +315,7 @@ class Chat implements MessageComponentInterface
         $user = $this->getClientByName($obj->message);
         if (!$chan)
             $error = ErrorCodes::CHANNEL_NOT_EXIST;
-        else if (!$user || !$user->getUser() || !$chan->removeUser($user->getUser()))
+        else if (!$user || !$chan->removeUser($user->getUser()))
             $error = ErrorCodes::USER_NOT_IN_CHANNEL;
         
         if (isset($error)) {
