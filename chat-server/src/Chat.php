@@ -51,6 +51,7 @@ class Chat implements MessageComponentInterface
                 echo "User login: Logged in!\n";
             else
                 echo "User login failed\n";
+            return;
         }
         
         // Other events require a logged in user
@@ -73,8 +74,6 @@ class Chat implements MessageComponentInterface
         else if ($obj->type === 'quit') {
             if ($this->parseQuit($client, $obj))
                 echo "{$client->getUser()->getName()} quit\n";
-            else
-                echo "User unable to quit??? {$client->getUser()->getName()}\n";
         }
         
         // Channel operations
@@ -98,15 +97,21 @@ class Chat implements MessageComponentInterface
         }
         else if ($obj->type === 'mode') {
             if ($this->parseMode($client, $obj))
-                "{$client->getUser()->getName()} changed modes in {$obj->to} to {$obj->message}\n";
+                echo "{$client->getUser()->getName()} changed modes in {$obj->to} to {$obj->message}\n";
             else
-                "{$client->getUser()->getName()} unable to change modes in {$obj->to}\n";
+                echo "{$client->getUser()->getName()} unable to change modes in {$obj->to}\n";
         }
         else if ($obj->type === 'kick') {
-            // TODO: Kick user from channel
+            if ($this->parseKick($client, $obj))
+                echo "{$client->getUser()->getName()} kicked {$obj->message} from {$obj->to}\n";
+            else
+                echo "{$client->getUser()->getName()} unable to kick {$obj->message} from {$obj->to}\n";
         }
-        else if ($obj->type === 'ban') {
-            // TODO: (Un-)Ban user from channel
+        else if ($obj->type === 'umode') {
+            if ($this->parseUserMode($client, $obj))
+                echo "{$client->getUser()->getName()} changed usermode of {$obj->message->user} in {$obj->to} to {$obj->message->mode}\n";
+            else
+                echo "{$client->getUser()->getName()} unable to change usermode of {$obj->message->user} in {$obj->to}\n";
         }
         
         // TODO: More events?
@@ -330,7 +335,8 @@ class Chat implements MessageComponentInterface
         // Broadcast to channel
         $chan->send([
             'type' => 'part',
-            'message' => $user->getUser()->getName()
+            'from' => $client->getUser()->getName(),
+            'message' => null
         ]);
         
         // Success string to client, do we need this?
@@ -338,7 +344,7 @@ class Chat implements MessageComponentInterface
             'type' => 'rmode',
             'success' => true,
             'to' => $obj->to,
-            'message' => $user->getUser()->getName()
+            'message' => null
         ]);
         return true;
     }
@@ -349,14 +355,14 @@ class Chat implements MessageComponentInterface
         if (!$chan)
             $error = ErrorCodes::CHANNEL_NOT_EXIST;
         else if (!$chan->userHasPermissions($client->getUser(), Permissions::CHANNEL_OPERATOR)
-                && !$user->hasPermission(Permissions::SERVER_OPERATOR))
+                && !$client->getUser()->hasPermission(Permissions::SERVER_OPERATOR))
             $error = ErrorCodes::INSUFFICIENT_PERMISSION;
 
         if (isset($error)) {
             $client->send([
                 'type' => 'rtopic',
                 'success' => false,
-                'message' =>  $error
+                'message' => $error
             ]);
             return false;
         }
@@ -366,6 +372,7 @@ class Chat implements MessageComponentInterface
         // Broadcast to channel
         $chan->send([
             'type' => 'topic',
+            'from' => $client->getUser()->getName(),
             'message' => $message
         ]);
         
@@ -385,7 +392,7 @@ class Chat implements MessageComponentInterface
         if (!$chan)
             $error = ErrorCodes::CHANNEL_NOT_EXIST;
         else if (!$chan->userHasPermissions($client->getUser(), Permissions::CHANNEL_OPERATOR)
-                && !$user->hasPermission(Permissions::SERVER_OPERATOR))
+                && !$client->getUser()->hasPermission(Permissions::SERVER_OPERATOR))
             $error = ErrorCodes::INSUFFICIENT_PERMISSION;
         
         $mode = intval($obj->message);
@@ -396,7 +403,7 @@ class Chat implements MessageComponentInterface
             $client->send([
                 'type' => 'rmode',
                 'success' => false,
-                'message' =>  $error
+                'message' => $error
             ]);
             return false;
         }
@@ -406,6 +413,7 @@ class Chat implements MessageComponentInterface
         // Broadcast to channel
         $chan->send([
             'type' => 'mode',
+            'from' => $client->getUser()->getName(),
             'message' => $mode
         ]);
         
@@ -417,6 +425,101 @@ class Chat implements MessageComponentInterface
             'message' => $mode
         ]);
         return true;
+    }
+    
+    public function parseKick($client, $obj)
+    {
+        // TODO: Do we want kick messages?
+        $chan = $this->getChannelByName($obj->to);
+        $user = $this->getClientByName($obj->message);
+        if (!$chan)
+            $error = ErrorCodes::CHANNEL_NOT_EXIST;
+        else if (!$user)
+            $error = ErrorCodes::USER_NOT_EXIST;
+        else if (!$chan->userHasPermissions($client->getUser(), Permissions::CHANNEL_OPERATOR)
+                && !$client->getUser()->hasPermission(Permissions::SERVER_OPERATOR))
+            $error = ErrorCodes::INSUFFICIENT_PERMISSION;
+            
+        if (isset($error)) {
+            $client->send([
+                'type' => 'rkick',
+                'success' => false,
+                'message' => $error
+            ]);
+            return false;
+        }
+        
+        $chan->removeUser($user);
+        
+        // Broadcast to channel
+        $chan->send([
+            'type' => 'kick',
+            'from' => $client->getUser()->getName(),
+            'message' => $user->getName()
+        ]);
+        
+        // Success string to client, do we need this?
+        $client->send([
+            'type' => 'rkick',
+            'success' => true,
+            'to' => $chan->getName(),
+            'message' => $user->getName()
+        ]);
+    }
+    
+    public function parseUserMode($client, $obj)
+    {
+        $chan = $this->getChannelByName($obj->to);
+        $user = $this->getClientByName($obj->message->user);
+        if (!$chan)
+            $error = ErrorCodes::CHANNEL_NOT_EXIST;
+        else if (!$user)
+            $error = ErrorCodes::USER_NOT_EXIST;
+        else if (!$chan->hasUser($user))
+            $error = ErrorCodes::USER_NOT_IN_CHANNEL;
+        else if (!$chan->userHasPermissions($client->getUser(), Permissions::CHANNEL_OPERATOR)
+                && !$client->getUser()->hasPermission(Permissions::SERVER_OPERATOR))
+            $error = ErrorCodes::INSUFFICIENT_PERMISSION;
+        
+        $mode = intval($obj->message->mode);
+        if ($mode >= Permissions::CHANNEL_LAST << 1)
+            $error = ErrorCodes::BAD_FORMAT;
+            
+        if (isset($error)) {
+            $client->send([
+                'type' => 'rumode',
+                'success' => false,
+                'message' => $error
+            ]);
+            return false;
+        }
+        
+        $chan->setUserPermissions($user, $mode);
+        
+        // Broadcast to channel
+        $chan->send([
+            'type' => 'umode',
+            'from' => $client->getUser()->getName(),
+            'message' => [
+                'user' => $user->getName(),
+                'mode' => $mode
+            ]
+        ]);
+        
+        // Success string to client, do we need this?
+        $client->send([
+            'type' => 'rumode',
+            'success' => true,
+            'to' => $chan->getName(),
+            'message' => [
+                'user' => $user->getName(),
+                'mode' => $mode
+            ]
+        ]);
+        
+        // Kick user from channel if banned
+        if ($mode & Permissions::CHANNEL_BANNED)
+            $chan->removeUser($user);
     }
     
     public function onClose(ConnectionInterface $conn) {

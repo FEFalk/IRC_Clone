@@ -5,6 +5,8 @@ abstract class Permissions
 {
     // ServerPermissions
     const SERVER_OPERATOR   = 1 << 0;
+    const SERVER_BANNED     = 1 << 1;
+    const SERVER_LAST = SERVER_BANNED;
     
     // ChannelModes
     const MODE_PRIVATE      = 1 << 0;   // Not listed in public channels list
@@ -14,4 +16,6 @@ abstract class Permissions
     // ChannelPermissions
     const CHANNEL_VOICE     = 1 << 0;
     const CHANNEL_OPERATOR  = 1 << 1;
+    const CHANNEL_BANNED    = 1 << 2;
+    const CHANNEL_LAST = CHANNEL_BANNED;
 }
