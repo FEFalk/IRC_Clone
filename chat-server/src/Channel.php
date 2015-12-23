@@ -73,6 +73,21 @@ class Channel
     }
     
     /*
+     * Remove a user from the channel
+     * @param User $user The user
+     */
+    public function removeUser(User $user)
+    {
+        foreach($this->users as $u) {
+            if ($u->user === $user) {
+                $this->users->detach($u);
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /*
      * Set a users permissions
      * @param User $user The user
      * @param int $permissions User permissions
@@ -99,20 +114,6 @@ class Channel
                 return $u->permissions;
         }
         return 0;
-    }
-    
-    /*
-     * Remove a user from the channel
-     * @param User $user The user
-     */
-    public function removeUser(User $user)
-    {
-        foreach($this->users as $u) {
-            if ($u->user === $user) {
-                $this->users->detach($u);
-                return;
-            }
-        }
     }
     
     /*
@@ -180,6 +181,11 @@ class Channel
     public function addMode($flag)
     {
         $this->modes |= $flag;
+    }
+    
+    public function setModes($modes)
+    {
+        $this->modes = $modes;
     }
     
     public function removeMode($flag)

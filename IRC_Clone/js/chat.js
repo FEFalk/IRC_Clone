@@ -31,6 +31,7 @@ $(function() {
                 console.log("Failed: " + e.data);
                 return;
             }
+            // Response messages
             if (data.type == "rlogin") {
                 if (data.success == true) {
                     console.log("Success!\n");
@@ -53,11 +54,13 @@ $(function() {
                 Chat.setUserList(data.message.name, data.message.users);
                 $('#channel-list button[data-channel="' + data.message.name + '"]').click();
             }
-            else if (data.type == "rtopic") {
-                Chat.setChannelTopic(data.message.chan, data.message.topic);
-            }
+            
+            // Event messages
             else if (data.type == "message") {
                 Chat.addMessage(data.to, data.from, data.message);
+            }
+            else if (data.type == "topic") {
+                Chat.setChannelTopic(data.to, data.message);
             }
 
             console.log(e.data);
@@ -101,7 +104,7 @@ $(function() {
             active = typeof active !== 'undefined' ? active : false;
         },
         
-      addMessage: function(chan, user, message) {
+        addMessage: function(chan, user, message) {
             var chandiv, doscroll = false;
             if (chan == '')
                 chandiv = $('.channel-item:not(.hidden)');
@@ -208,8 +211,8 @@ $(function() {
                 chat.close();
             } else if (cmd == 'topic') {
                 //makes it possible to have space:s in the topic message
-                topic = arg.concat(" ").concat(msg);
-                chat.send(JSON.stringify({type: 'topic', message: {chan: activechan, topic: topic}}));
+                var topic = arg.concat(" ").concat(msg);
+                chat.send(JSON.stringify({type: 'topic', to: activechan, message: topic}));
             }
         }
         else {

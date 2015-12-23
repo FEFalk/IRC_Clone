@@ -30,12 +30,10 @@ class Chat implements MessageComponentInterface
     public function onOpen(ConnectionInterface $conn)
     {
         echo "New connection! ({$conn->resourceId})\n";
-        
         $this->clients->attach(new ChatConnection($conn, $this));
     }
 
     public function onMessage(ConnectionInterface $from, $msg) {
-        // TODO: Functionize! parseLogin(...), parseMessage(...), ...?
         $client = $this->getClient($from);
         if (!$client) {
             $from->close();
@@ -66,7 +64,7 @@ class Chat implements MessageComponentInterface
         // Messages
         if ($obj->type === 'message') {
             if ($this->parseMessage($client, $obj))
-                echo "{$client->getUser()->getName()} -> {$obj->to} ({$obj->message})\n";
+                echo "{$client->getUser()->getName()} -> {$obj->to} ({$obj->message})}\n";
             else
                 echo "Message failed\n";
         }
@@ -74,7 +72,7 @@ class Chat implements MessageComponentInterface
         // Server operations
         else if ($obj->type === 'quit') {
             if ($this->parseQuit($client, $obj))
-                echo "User quit {$client->getUser()->getName()}\n";
+                echo "{$client->getUser()->getName()} quit\n";
             else
                 echo "User unable to quit??? {$client->getUser()->getName()}\n";
         }
@@ -82,19 +80,27 @@ class Chat implements MessageComponentInterface
         // Channel operations
         else if ($obj->type === 'join') {
             if ($this->parseJoin($client, $obj))
-                echo "User joined channel {$obj->message->chan}\n";
+                echo "{$client->getUser()->getName()} joined channel {$obj->message->chan}\n";
             else
-                echo "User unable to join channel {$obj->message->chan}\n";
+                echo "{$client->getUser()->getName()} unable to join channel {$obj->message->chan}\n";
         }
         else if ($obj->type === 'part') {
-            // TODO: Leave channel
+            if ($this->parsePart($client, $obj))
+                echo "{$client->getUser()->getName()} part channel {$obj->message->chan}\n";
+            else
+                echo "{$client->getUser()->getName()} unable to part channel {$obj->message->chan}\n";
         }
         else if ($obj->type === 'topic') {
-            // TODO: Change channel topic
-            if($this->parseTopic($client, $obj));
+            if($this->parseTopic($client, $obj))
+                echo "{$client->getUser()->getName()} changed topic in {$obj->to} to {$obj->message}\n";
+            else
+                echo "{$client->getUser()->getName()} unable to change topic in {$obj->to}\n";
         }
         else if ($obj->type === 'mode') {
-            // TODO: Change user permissions in a channel
+            if ($this->parseMode($client, $obj))
+                "{$client->getUser()->getName()} changed modes in {$obj->to} to {$obj->message}\n";
+            else
+                "{$client->getUser()->getName()} unable to change topic in {$obj->to}\n";
         }
         else if ($obj->type === 'kick') {
             // TODO: Kick user from channel
@@ -106,36 +112,6 @@ class Chat implements MessageComponentInterface
         // TODO: More events?
     }
     
-    /*Obj = message, and client = user*/
-    public function parseTopic($client, $obj) 
-    {
-        $chan = $this->getChannelByName($obj->message->chan);
-
-        if (!$chan)
-            $error = ErrorCodes::UNKNOWN_ERROR;
-        else if (!$chan->userHasPermissions($client->getUser(),Permissions::CHANNEL_OPERATOR))
-            $error = ErrorCodes::INSUFFICIENT_PERMISSION;
-
-        if (isset($error)) {
-            $client->send([
-                'type' => 'rtopic',
-                'success' => false,
-                'message' =>  $error
-            ]);
-
-            return false;
-        }
-
-        $client->send([
-            'type' => 'rtopic',
-            'success' => true,
-            'message' =>  [
-                'chan' => $obj->message->chan,
-                'topic' => $obj->message->topic
-            ]
-        ]);
-    }
-
     public function parseLogin($client, $obj)
     {
         // If client is already logged in. Might want to allow multiple logins?
@@ -208,7 +184,8 @@ class Chat implements MessageComponentInterface
             else if (!$chan->hasUser($client->getUser()))
                 $error = ErrorCodes::USER_NOT_IN_CHANNEL;
             else if ($chan->hasMode(Permissions::MODE_MODERATED)
-                    && !$chan->userHasPermissions($client->getUser(), Permissions::CHANNEL_OPERATOR | CHANNEL_VOICE))
+                    && !$chan->userHasPermissions($client->getUser(), Permissions::CHANNEL_OPERATOR | CHANNEL_VOICE)
+                    && !$user->hasPermission(Permissions::SERVER_OPERATOR))
                 $error = ErrorCodes::CHANNEL_MODERATED;
             
             if (isset($error)) {
@@ -274,7 +251,7 @@ class Chat implements MessageComponentInterface
     {
         $chan = null;
         if (!preg_match('/^([#][^\x07\x2C\s]{0,16})$/', $obj->message->chan)) {
-            $error = ErrorCodes::CHANNEL_NAME_FORMAT;
+            $error = ErrorCodes::BAD_FORMAT;
         }
         else {
             $chan = $this->getChannelOrCreate($obj->message->chan);
@@ -332,6 +309,115 @@ class Chat implements MessageComponentInterface
         return true;
     }
     
+    public function parsePart($client, $obj)
+    {
+        $chan = $this->getChannelByName($obj->to);
+        $user = $this->getClientByName($obj->message);
+        if (!$chan)
+            $error = ErrorCodes::CHANNEL_NOT_EXIST;
+        else if (!$user || !$user->getUser() || !$chan->removeUser($user->getUser()))
+            $error = ErrorCodes::USER_NOT_IN_CHANNEL;
+        
+        if (isset($error)) {
+            $client->send([
+                'type' => 'rpart',
+                'success' => false,
+                'message' => $error
+            ]);
+            return false;
+        }
+        
+        // Broadcast to channel
+        $chan->send([
+            'type' => 'part',
+            'message' => $user->getUser()->getName()
+        ]);
+        
+        // Success string to client, do we need this?
+        $client->send([
+            'type' => 'rmode',
+            'success' => true,
+            'to' => $obj->to,
+            'message' => $user->getUser()->getName()
+        ]);
+        return true;
+    }
+    
+    public function parseTopic($client, $obj) 
+    {
+        $chan = $this->getChannelByName($obj->to);
+        if (!$chan)
+            $error = ErrorCodes::CHANNEL_NOT_EXIST;
+        else if (!$chan->userHasPermissions($client->getUser(), Permissions::CHANNEL_OPERATOR)
+                && !$user->hasPermission(Permissions::SERVER_OPERATOR))
+            $error = ErrorCodes::INSUFFICIENT_PERMISSION;
+
+        if (isset($error)) {
+            $client->send([
+                'type' => 'rtopic',
+                'success' => false,
+                'message' =>  $error
+            ]);
+            return false;
+        }
+        
+        $message = htmlspecialchars($obj->message);
+
+        // Broadcast to channel
+        $chan->send([
+            'type' => 'topic',
+            'message' => $message
+        ]);
+        
+        // Success string to client, do we need this?
+        $client->send([
+            'type' => 'rtopic',
+            'success' => true,
+            'to' => $obj->to,
+            'message' => $message
+        ]);
+        return true;
+    }
+    
+    public function parseMode($client, $obj)
+    {
+        $chan = $this->getChannelByName($obj->to);
+        if (!$chan)
+            $error = ErrorCodes::CHANNEL_NOT_EXIST;
+        else if (!$chan->userHasPermissions($client->getUser(), Permissions::CHANNEL_OPERATOR)
+                && !$user->hasPermission(Permissions::SERVER_OPERATOR))
+            $error = ErrorCodes::INSUFFICIENT_PERMISSION;
+        
+        $mode = intval($obj->message);
+        if ($mode >= Permissions::MODE_LAST << 1)
+            $error = ErrorCodes::BAD_FORMAT;
+            
+        if (isset($error)) {
+            $client->send([
+                'type' => 'rmode',
+                'success' => false,
+                'message' =>  $error
+            ]);
+            return false;
+        }
+        
+        $chan->setModes($mode);
+        
+        // Broadcast to channel
+        $chan->send([
+            'type' => 'mode',
+            'message' => $mode
+        ]);
+        
+        // Success string to client, do we need this?
+        $client->send([
+            'type' => 'rmode',
+            'success' => true,
+            'to' => $obj->to,
+            'message' => $mode
+        ]);
+        return true;
+    }
     
     public function onClose(ConnectionInterface $conn) {
         echo "Connection {$conn->resourceId} has disconnected\n";
@@ -377,7 +463,6 @@ class Chat implements MessageComponentInterface
     public function getChannelByName($name)
     {
         foreach($this->channels as $chan) {
-            echo $chan->getName() . " [chan]\n";
             if (strtolower($chan->getName()) === strtolower($name)) {
                 return $chan;
             }

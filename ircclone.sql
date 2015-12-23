@@ -84,6 +84,6 @@ SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `ircclone`;
-INSERT INTO `ircclone`.`users` (`id`, `name`, `password`, `email`, `permissions`) VALUES (0, 'SERVER', NULL, NULL, 7);
+INSERT INTO `ircclone`.`users` (`id`, `name`, `password`, `email`, `permissions`) VALUES (0, 'SERVER', '', NULL, 7);
 
 COMMIT;
