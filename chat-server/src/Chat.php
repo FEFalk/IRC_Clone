@@ -106,39 +106,34 @@ class Chat implements MessageComponentInterface
         // TODO: More events?
     }
     
+    /*Obj = message, and client = user*/
     public function parseTopic($client, $obj) 
     {
         $chan = $this->getChannelByName($obj->message->chan);
-        if($chan)
-        {
-            //TODO permisson check
-            if($chan->userHasPermissions($client->getUser(),Permissions::CHANNEL_OPERATOR) || $chan->userHasPermissions($client->getUser(),Permissions::SERVER_OPERATOR))
-            {
-                $client->send([
-                    'type' => 'rtopic',
-                    'success' => true,
-                    'message' =>  [
-                        'chan' => $obj->message->chan,
-                        'topic' => $obj->message->topic
-                    ]
-                ]);
-           } 
-            else {
-                $client->send([
-                    'type' => 'rtopic',
-                    'success' => false,
-                    'message' =>  ErrorCodes::INSUFFICIENT_PERMISSION
-                ]);
-            }
+
+        if (!$chan)
+            $error = ErrorCodes::UNKNOWN_ERROR;
+        else if (!$chan->userHasPermissions($client->getUser(),Permissions::CHANNEL_OPERATOR))
+            $error = ErrorCodes::INSUFFICIENT_PERMISSION;
+
+        if (isset($error)) {
+            $client->send([
+                'type' => 'rtopic',
+                'success' => false,
+                'message' =>  $error
+            ]);
+
+            return false;
         }
-        else 
-        {
-                $client->send([
-                    'type' => 'rtopic',
-                    'success' => false,
-                    'message' =>  ErrorCodes::UNKNOWN_ERROR
-                ]);
-        }
+
+        $client->send([
+            'type' => 'rtopic',
+            'success' => true,
+            'message' =>  [
+                'chan' => $obj->message->chan,
+                'topic' => $obj->message->topic
+            ]
+        ]);
     }
 
     public function parseLogin($client, $obj)
