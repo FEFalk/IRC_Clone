@@ -42,7 +42,7 @@ class Database
      */
     public function getUserInfo($username)
     {
-        $stmt = $this->db->prepare('SELECT `id`, `name`, `password`, `email`, `permissions` FROM `users` WHERE `name` = ? OR `email` = ? LIMIT 1;');
+        $stmt = $this->db->prepare('SELECT `id`, `name`, `password`, `email`, `permissions`, `last_login`, `last_logout` FROM `users` WHERE `name` = ? OR `email` = ? LIMIT 1;');
         $stmt->execute(array($username, $username));
         $result = $stmt->fetch();
         $stmt->closeCursor();
@@ -96,43 +96,17 @@ class Database
             SELECT `users`.`name` AS `from`, `message`, `date`
             FROM `events`
             INNER JOIN `users` ON `users`.`id` = `userid`
-            WHERE `type` = ? AND `to` = ?
+            WHERE `type` = ? AND `to` = ? AND `date` < ?
             LIMIT ?;');
-        $stmt->execute(array('message', $user->getName(), PHP_INT_MAX));
+        $stmt->execute(array('message', $user->getName(), $user->getLastLogout(), PHP_INT_MAX));
         $result[$user->getName()] = $stmt->fetchAll();
         $stmt->closeCursor();
         foreach($user->getChannels() as $name => $arr) {
-            $stmt->execute(array('message', $name, $limit));
+            $stmt->execute(array('message', $name, $user->getLastLogout(), $limit));
             $result[$name] = $stmt->fetchAll();
             $stmt->closeCursor();
         }
         return $result;
-    }
-    
-    /**
-     * Send message to a user
-     * @param User $from User that sent the message
-     * @param string $to Username to send the message to
-     * @param string $message The message
-     * @return boolean True if the user exists and the message was sent
-     */
-    public function sendMessageToUser(User $from, $to, $message)
-    {
-        // Check if user exists
-        $stmt = $this->db->prepare('SELECT `id` FROM `users` WHERE `name` = ? LIMIT 1;');
-        $stmt->execute(array($to));
-        $userid = $stmt->fetch()['id'];
-        $stmt->closeCursor();
-        if (!$userid)
-            return false;
-        
-        // Send message
-        $stmt = $this->db->prepare('
-            INSERT INTO `events` (`userid`, `to`, `type`, `message`, `date`)
-            VALUES(?, ?, ?, ?, ?);');
-        $stmt->execute(array($from->getUserId(), $to, 'message', $message, time()));
-        $stmt->closeCursor();
-        return true;
     }
     
     /**
@@ -178,5 +152,61 @@ class Database
         $result = $stmt->fetch();
         $stmt->closeCursor();
         return $result != null ? $result['permissions'] : 0;
+    }
+    
+    /**
+     * Login a user
+     * @param User $user User object
+     */
+    public function loginUser(User $user) 
+    {
+        // Update last_login
+        $stmt = $this->db->prepare('UPDATE `users` SET `last_login` = ? WHERE `id` = ?;');
+        $stmt->execute(array(time(), $user->getUserId()));
+        $c = $stmt->rowCount();
+        $stmt->closeCursor();
+        return $c == 1;
+    }
+    
+    /**
+     * Logout a user
+     * @param User $user User object
+     */
+    public function logoutUser(User $user)
+    {
+        // Update last_logout
+        $stmt = $this->db->prepare('UPDATE `users` SET `last_logout` = ? WHERE `id` = ?;');
+        $stmt->execute(array(time(), $user->getUserId()));
+        $c = $stmt->rowCount();
+        $stmt->closeCursor();
+        return $c == 1;
+    }
+    
+    public function changeUserName(User $user, $newname)
+    {
+        $stmt = $this->db->prepare('UPDATE `users` SET `name` = ? WHERE `id` = ?;');
+        $stmt->execute(array($newname, $user->getUserId()));
+        $c = $stmt->rowCount();
+        $stmt->closeCursor();
+        return $c == 1;
+    }
+    
+    /**
+     * Log an event to the database
+     * @param int $userid User ID (0 for SERVER)
+     * @param string $to #Channel or Username
+     * @param string $type Event type
+     * @param string $message The message
+     * @param int $date (OPTIONAL) Event date
+     */
+    public function addEvent($userid, $to, $type, $message, $date = 0)
+    {
+        if ($date === 0)
+            $date =  time();
+        $stmt = $this->db->prepare('INSERT INTO `events` (`userid`, `to`, `type`, `message`, `date`) VALUES(?, ?, ?, ?, ?)');
+        $stmt->execute(array($userid, $to, $type, $message, $date));
+        $c = $stmt->rowCount();
+        $stmt->closeCursor();
+        return $c == 1;
     }
 }

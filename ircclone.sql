@@ -15,6 +15,8 @@ CREATE  TABLE IF NOT EXISTS `ircclone`.`users` (
   `password` VARCHAR(60) NOT NULL ,
   `email` VARCHAR(45) NULL ,
   `permissions` INT UNSIGNED NULL DEFAULT 0 ,
+  `last_login` BIGINT UNSIGNED NULL ,
+  `last_logout` BIGINT UNSIGNED NULL ,
   PRIMARY KEY (`id`) )
 AUTO_INCREMENT = 1;
 
@@ -84,6 +86,6 @@ SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `ircclone`;
-INSERT INTO `ircclone`.`users` (`id`, `name`, `password`, `email`, `permissions`) VALUES (0, 'SERVER', '', NULL, 7);
+INSERT INTO `ircclone`.`users` (`id`, `name`, `password`, `email`, `permissions`, `last_login`, `last_logout`) VALUES (0, 'SERVER', '', NULL, 7, NULL, NULL);
 
 COMMIT;

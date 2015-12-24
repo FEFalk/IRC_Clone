@@ -50,6 +50,7 @@ class ChatConnection implements ChatConnectionInterface
         
         // Create User object
         $this->user = new User($userinfo, $this, $this->chat);
+        $this->chat->db->loginUser($this->user);
         
         // Join default channel if empty
         if (count($chans) == 0) {
@@ -67,50 +68,16 @@ class ChatConnection implements ChatConnectionInterface
         foreach($this->user->getChannels() as $chan) {
             // Send logout to channel users
             $chan['chan']->send([
-                    'type' => 'offline',
-                    'from' => $this->user->getName(),
-                    'message' => $msg
-                ]);
+                'type' => 'offline',
+                'from' => $this->user->getName(),
+                'message' => $msg
+            ]);
                 
             // Remove user from active users in channel
             $chan['chan']->removeUser($this->user);
         }
-    }
-
-    public function setName($name, $bot = false)
-    {
-        // TODO: Move to onMessage
-        $error = false;
-        // Check if the name is invalid or already exists
-        if (!preg_match('/\A[a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]{2,15}\z/i', $name))
-        {
-            $error = 'invalid';
-        }
-        else if ($this->repository->getClientByName($name) !== null)
-        {
-            $error = 'exists';
-        }
         
-        if ($error)
-        {
-            $this->send([
-                'type'    => 'setname',
-                'success' => false,
-                'message' => $error
-            ]);
-        }
-        else
-        {
-            $this->name = $name;
-
-            $this->send([
-                'type'  => 'setname',
-                'success' => true,
-                'message' => $this->name
-            ]);
-            
-            
-        }
+        $this->chat->db->logoutUser($this->user);
     }
 
     public function send(array $data)

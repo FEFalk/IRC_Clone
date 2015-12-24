@@ -17,6 +17,8 @@ class User
     private $name;
     private $email;
     private $permissions; // Server permissions
+    private $last_login;
+    private $last_logout;
     
     public function __construct(array $userinfo, ChatConnection $conn, Chat $chat)
     {
@@ -28,6 +30,8 @@ class User
         $this->name = $userinfo['name'];
         $this->email = $userinfo['email'];
         $this->permissions = $userinfo['permissions'];
+        $this->last_login = time();
+        $this->last_logout = $userinfo['last_logout'];
         
         foreach($userinfo['channels'] as $c => $p) {
             $this->joinChannel($this->chat->getChannelOrCreate($c), $p);
@@ -121,5 +125,15 @@ class User
     public function hasPermission($flag)
     {
         return $this->permissions & $flag;
+    }
+    
+    public function getLastLogin()
+    {
+        return $this->last_login;
+    }
+    
+    public function getLastLogout()
+    {
+        return $this->last_logout;
     }
 }

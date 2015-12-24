@@ -114,29 +114,34 @@ class Chat implements MessageComponentInterface
                 echo "{$client->getUser()->getName()} unable to change usermode of {$obj->message->user} in {$obj->to}\n";
         }
         
+        // User operations
+        else if ($obj->type === 'name') {
+            echo "{$client->getUser()->getName()} ";
+            if ($this->parseNameChange($client, $obj))
+                echo "changed name to {$client->getUser()->getName()}\n";
+            else
+                echo "unable to change name to {$obj->message}\n";
+        }
+        
         // TODO: More events?
     }
     
     public function parseLogin($client, $obj)
     {
         // If client is already logged in. Might want to allow multiple logins?
-        if ($this->getClientByName($obj->message->username)) {
-            $client->send([
-                'type' => 'rlogin',
-                'success' => false,
-                'message' => ErrorCodes::LOGIN_ALREADY_LOGGEDIN
-            ]);
-            return false;
+        if ($this->getClientByName($obj->message->username))
+            $error = ErrorCodes::LOGIN_ALREADY_LOGGEDIN;
+        else {
+            $user = $client->login($obj->message->username, $obj->message->password);
+            if (!$user)
+                $error = ErrorCodes::LOGIN_INCORRECT;
         }
         
-        $user = $client->login($obj->message->username, $obj->message->password);
-        if (!$user) {
-            // Username or password is incorrect!
-            echo "User login: name or password incorrect\n";
+        if (isset($error)) {
             $client->send([
                 'type' => 'rlogin',
                 'success' => false,
-                'message' => ErrorCodes::LOGIN_INCORRECT
+                'message' => $error
             ]);
             return false;
         }
@@ -163,24 +168,25 @@ class Chat implements MessageComponentInterface
             ]
         ]);
         
-        // Broadcast login to the users channels
-        $client->getUser()->broadcast([
-            'type' => 'online',
-            'message' => null
-        ]);
-        
+        // Feed offline messages
         $offlinemsgs = $this->db->getOfflineMessages($client->getUser());
         $client->send([
             'type' => 'loginmsgs',
             'message' => $offlinemsgs
         ]);
         
-        // TODO: Add login event to database
+        // Broadcast login to the users channels
+        $client->getUser()->broadcast([
+            'type' => 'online',
+            'message' => null
+        ]);
         return true;
     }
 
     public function parseMessage($client, $obj)
     {
+        $message = htmlspecialchars($obj->message);
+        
         // Sent to a channel
         if ($obj->to[0] == '#') {
             $chan = $this->getChannelByName($obj->to);
@@ -202,21 +208,34 @@ class Chat implements MessageComponentInterface
                 return false;
             }
             
-            $message = htmlspecialchars($obj->message);
+            $to = $chan->getName();
             
             // Send message to channel
             $chan->send([
                 'type' => 'message',
                 'from' => $client->getUser()->getName(),
+                'date' => time(),
                 'message' => $message
             ]);
         }
         // User
         else {
             $receiver = $this->getClientByName($obj->to);
-            if (!$receiver) {
-                // User might be offline
-                if (!$this->db->sendMessageToUser($client->getUser(), $obj->to, $obj->message)) {
+            if ($receiver) {
+                $to = $receiver->getUser()->getName();
+                // Send message to receiver
+                $receiver->send([
+                    'type' => 'message',
+                    'from' => $client->getUser()->getName(),
+                    'to' => $receiver->getUser()->getName(),
+                    'date' => time(),
+                    'message' => $message
+                ]);
+            }
+            else {
+                // User may be offline
+                $u = $this->getUserInfo($obj->to);
+                if (!$u) {
                     $client->send([
                         'type' => 'rmessage',
                         'success' => false,
@@ -224,24 +243,20 @@ class Chat implements MessageComponentInterface
                     ]);
                     return false;
                 }
-            }
-            else {
-                // Send message to receiver
-                $receiver->send([
-                    'type' => 'message',
-                    'from' => $client->getUser()->getName(),
-                    'to' => $receiver->getUser()->getName(),
-                    'message' => $obj->message
-                ]);
+                $to = $u['name'];
             }
         }
         
         // Success string to client, do we need this?
         $client->send([
             'type' => 'rmessage',
+            'to' => $to,
             'success' => true,
-            'message' => null
+            'message' => $message
         ]);
+        
+        // Add event to database
+        $this->db->addEvent($client->getUser()->getUserId(), $to, 'message', $obj->message);
         return true;
     }
     
@@ -255,6 +270,7 @@ class Chat implements MessageComponentInterface
     public function parseJoin($client, $obj)
     {
         $chan = null;
+        // Check channel format
         if (!preg_match('/^([#][^\x07\x2C\s]{0,16})$/', $obj->message->chan)) {
             $error = ErrorCodes::BAD_FORMAT;
         }
@@ -264,12 +280,17 @@ class Chat implements MessageComponentInterface
                 $error = ErrorCodes::UNKNOWN_ERROR;
         }
         
-        // Check password and user limit if user is not a server operator
-        if ($chan && !$client->getUser()->hasPermission(Permissions::SERVER_OPERATOR)) {
-            if ($chan->hasPassword() && $chan->getPassword() != $obj->message->password)
-                $error = ErrorCodes::CHANNEL_PASSWORD_MISMATCH;
-            else if ($chan->getUserCount() < $chan->getUserLimit())
-                $error = ErrorCodes::CHANNEL_USERLIMIT_REACHED;
+        // Check password, permissions and user limit
+        if ($chan) {
+            $permissions = $this->db->getUserChannelPermissions($client->getUser()->getUserId(), $chan->getName());
+            if (!$client->getUser()->hasPermission(Permissions::SERVER_OPERATOR)) {
+                if ($chan->hasPassword() && $chan->getPassword() != $obj->message->password)
+                    $error = ErrorCodes::CHANNEL_PASSWORD_MISMATCH;
+                else if ($chan->getUserCount() < $chan->getUserLimit())
+                    $error = ErrorCodes::CHANNEL_USERLIMIT_REACHED;
+                else if ($permissions & Permissions::CHANNEL_BANNED)
+                    $error = ErrorCodes::USER_BANNED;
+            }
         }
         
         if (isset($error)) {
@@ -282,15 +303,7 @@ class Chat implements MessageComponentInterface
         }
         
         // We have a channel and the user has provided the correct password/userlimit not reached
-        $permissions = $this->db->getUserChannelPermissions($client->getUser()->getUserId(), $chan->getName());
         $chan->addUser($client->getUser(), $permissions);
-        
-        // Send join event to users in channel
-        $chan->send([
-            'type' => 'join',
-            'from' => $client->getUser()->getName(),
-            'message' => null
-        ]);
         
         // Populate user list
         $users = $this->db->getChannelUsers($chan->getName());
@@ -311,16 +324,26 @@ class Chat implements MessageComponentInterface
                 'users' => $users
             ]
         ]);
+        
+        // Send join event to users in channel
+        $chan->send([
+            'type' => 'join',
+            'from' => $client->getUser()->getName(),
+            'date' => time(),
+            'message' => null
+        ]);
+        
+        // Add event to database
+        $this->db->addEvent($client->getUser()->getUserId(), $chan->getName(), 'join', $client->getUser()->getName());
         return true;
     }
     
     public function parsePart($client, $obj)
     {
         $chan = $this->getChannelByName($obj->to);
-        $user = $this->getClientByName($obj->message);
         if (!$chan)
             $error = ErrorCodes::CHANNEL_NOT_EXIST;
-        else if (!$user || !$chan->removeUser($user->getUser()))
+        else if (!$chan->removeUser($client->getUser()))
             $error = ErrorCodes::USER_NOT_IN_CHANNEL;
         
         if (isset($error)) {
@@ -336,6 +359,7 @@ class Chat implements MessageComponentInterface
         $chan->send([
             'type' => 'part',
             'from' => $client->getUser()->getName(),
+            'date' => time(),
             'message' => null
         ]);
         
@@ -346,6 +370,9 @@ class Chat implements MessageComponentInterface
             'to' => $obj->to,
             'message' => null
         ]);
+        
+        // Add event to database
+        $this->db->addEvent($client->getUser()->getUserId(), $chan->getName(), 'part', $client->getUser()->getName());
         return true;
     }
     
@@ -368,11 +395,12 @@ class Chat implements MessageComponentInterface
         }
         
         $message = htmlspecialchars($obj->message);
-
+        
         // Broadcast to channel
         $chan->send([
             'type' => 'topic',
             'from' => $client->getUser()->getName(),
+            'date' => time(),
             'message' => $message
         ]);
         
@@ -383,6 +411,9 @@ class Chat implements MessageComponentInterface
             'to' => $obj->to,
             'message' => $message
         ]);
+        
+        // Add event to database
+        $this->db->addEvent($client->getUser()->getUserId(), $chan->getName(), 'topic', $obj->message);
         return true;
     }
     
@@ -414,6 +445,7 @@ class Chat implements MessageComponentInterface
         $chan->send([
             'type' => 'mode',
             'from' => $client->getUser()->getName(),
+            'date' => time(),
             'message' => $mode
         ]);
         
@@ -424,6 +456,9 @@ class Chat implements MessageComponentInterface
             'to' => $obj->to,
             'message' => $mode
         ]);
+        
+        // Add event to database
+        $this->db->addEvent($client->getUser()->getUserId(), $chan->getName(), 'mode', $mode);
         return true;
     }
     
@@ -455,6 +490,7 @@ class Chat implements MessageComponentInterface
         $chan->send([
             'type' => 'kick',
             'from' => $client->getUser()->getName(),
+            'date' => time(),
             'message' => $user->getName()
         ]);
         
@@ -465,6 +501,10 @@ class Chat implements MessageComponentInterface
             'to' => $chan->getName(),
             'message' => $user->getName()
         ]);
+        
+        // Add event to database
+        $this->db->addEvent($client->getUser()->getUserId(), $chan->getName(), 'kick', $user->getName());
+        return true;
     }
     
     public function parseUserMode($client, $obj)
@@ -500,6 +540,7 @@ class Chat implements MessageComponentInterface
         $chan->send([
             'type' => 'umode',
             'from' => $client->getUser()->getName(),
+            'date' => time(),
             'message' => [
                 'user' => $user->getName(),
                 'mode' => $mode
@@ -520,6 +561,55 @@ class Chat implements MessageComponentInterface
         // Kick user from channel if banned
         if ($mode & Permissions::CHANNEL_BANNED)
             $chan->removeUser($user);
+        
+        // Add event to database
+        $this->db->addEvent($client->getUser()->getUserId(), $chan->getName(), 'umode', $user->getName() + ':' + $mode);
+    }
+    
+    public function parseNameChange($client, $obj)
+    {
+        $user = $this->db->getUserInfo($obj->message);
+        if ($user)
+            $error = ErrorCodes::NAME_IN_USE;
+        else if (!preg_match('/\A[a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]{2,15}\z/i', $obj->message))
+            $error = ErrorCodes::BAD_FORMAT;
+        
+        if (isset($error)) {
+            $client->send([
+                'type' => 'rname',
+                'success' => false,
+                'message' => $error
+            ]);
+            return false;
+        }
+        
+        // Change name
+        $oldname = $client->getUser()->getName();
+        if (!$this->db->changeUserName($client->getUser(), $obj->message)) {
+            echo " Error while changing name to {$obj->message}!\n";
+            return false;
+        }
+        $client->getUser()->setName($obj->message);
+        
+        // Success string to client
+        $client->send([
+            'type' => 'rname',
+            'success' => true,
+            'message' => $obj->message
+        ]);
+        
+        // Broadcast to user channels
+        $client->getUser()->broadcast([
+            'type' => 'name',
+            'date' => time(),
+            'message' => $obj->message
+        ]);
+        
+        // Add event to database
+        foreach($client->getUser()->getChannels(true) as $channame => $arr) {
+            $this->db->addEvent($client->getUser()->getUserId(), $channame, 'name', $oldname + ':' + $client->getUser()->getName());
+        }
+        return true;
     }
     
     public function onClose(ConnectionInterface $conn) {

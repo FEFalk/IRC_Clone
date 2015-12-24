@@ -9,12 +9,14 @@ abstract class ErrorCodes
     const LOGIN_ALREADY_LOGGEDIN    = 3;
     const USER_NOT_EXIST            = 4;
     const USER_NOT_IN_CHANNEL       = 5;
+    const USER_BANNED               = 6;
     
-    const CHANNEL_NOT_EXIST         = 6;
-    const CHANNEL_PASSWORD_MISMATCH = 7;
-    const CHANNEL_USERLIMIT_REACHED = 8;
-    const CHANNEL_MODERATED         = 9;
+    const CHANNEL_NOT_EXIST         = 7;
+    const CHANNEL_PASSWORD_MISMATCH = 8;
+    const CHANNEL_USERLIMIT_REACHED = 9;
+    const CHANNEL_MODERATED         = 10;
     
-    const BAD_FORMAT                = 10;
-    const INSUFFICIENT_PERMISSION   = 11;
+    const BAD_FORMAT                = 11;
+    const INSUFFICIENT_PERMISSION   = 12;
+    const NAME_IN_USE               = 13;
 }
