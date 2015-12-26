@@ -1,6 +1,13 @@
 $(function() {
     var chat;
     
+    // Constants
+    var Permissions = {};
+    Object.defineProperty(Permissions, 'CHANNEL_VOICE',      withValue(1 << 0));
+    Object.defineProperty(Permissions, 'CHANNEL_OPERATOR',   withValue(1 << 1));
+    Object.defineProperty(Permissions, 'CHANNEL_BANNED',     withValue(1 << 2));
+    
+    
     // Chat functionality
     var Chat = {
         login: function(username, password) {
@@ -97,11 +104,13 @@ $(function() {
         },
         
         setUserList: function(chan, userlist) {
-            $('.channel-item[data-channel="' + chan + '"]').attr('data-users', JSON.stringify(userlist));
+            $('.channel-item[data-channel="' + chan + '"]').data('users', userlist);
         },
         
-        addUser: function(chan, name, active) {
+        addUser: function(chan, name, permissions, active) {
+            permissions = typeof permissions !== 'undefined' ? permissions : 0;
             active = typeof active !== 'undefined' ? active : false;
+            $('.channel-item[data-channel="' + chan + '"]').data('users')[name] = {active: active, permissions: permissions};
         },
         
         addMessage: function(chan, user, message) {
@@ -141,25 +150,19 @@ $(function() {
         var temp = text.replace(exp,"<a href=\"$1\">$1</a>");
         var result = "";
         while (temp.length > 0) {
-          var pos = temp.indexOf("href=\"");
-          if (pos == -1) {
-              result += temp;
-              break;
-          }
-          result += temp.substring(0, pos + 6);
-          temp = temp.substring(pos + 6, temp.length);
-          if ((temp.indexOf("://") > 8) || (temp.indexOf("://") == -1)) {
-              result += "http://";
-          }
+            var pos = temp.indexOf("href=\"");
+            if (pos == -1) {
+                result += temp;
+                break;
+            }
+            result += temp.substring(0, pos + 6);
+            temp = temp.substring(pos + 6, temp.length);
+            if ((temp.indexOf("://") > 8) || (temp.indexOf("://") == -1)) {
+                result += "http://";
+            }
         }
         return result;
     }
-
-    // Show alert (alert-id, alert-text-id, message)
-    var showAlert = function(id, txtid, msg) {
-        $(id).removeClass('hidden');
-        $(txtid).text(msg);
-    };
     
     $('#login-form').submit(function(event) {
         event.preventDefault();
@@ -173,17 +176,42 @@ $(function() {
         var channel = $(this).clone().children().remove().end().text();
         $('.channel-item:not(.hidden)').addClass('hidden');
         $('.channel-item[data-channel="' + channel + '"').removeClass('hidden');
-        $('#user-list').text('');
-        $.each(JSON.parse($('.channel-item[data-channel="' + channel + '"]').attr('data-users')), function(name, active) {
-            // TODO: color from permission? text-danger, text-success, text-muted etc...
-            var color = '';
-            if (!active)
-                color = 'text-muted';
-            $('#user-list').append('<li role="presentation"><a href="#" class="'+ color +'">' + name + '</a></li>');
-        });
+        updateActiveUserlist();
         $('#channel-list > button[data-channel="'+ channel +'"] span').text("");
         $('#channel-list button[data-channel="' + channel + '"]').addClass('active').siblings().removeClass('active');
     });
+    
+    function updateActiveUserlist() {
+        var users = $('.channel-item:not(.hidden)').data('users'),
+            keys = Object.keys(users),
+            i, k, len, color;
+        
+        // Sort keys based on active status, permissions and name
+        keys.sort(function(a, b){
+            var usera = users[a], userb = users[b];
+            if (!usera.active ^ !userb.active)
+                return (usera.active ? -1 : 1);
+            if (!(usera.permissions & Permissions.CHANNEL_OPERATOR) ^ !(userb.permissions & Permissions.CHANNEL_OPERATOR))
+                return usera.permissions & Permissions.CHANNEL_OPERATOR ? -1 : 1;
+            if (!(usera.permissions & Permissions.CHANNEL_VOICE) ^ !(userb.permissions & Permissions.CHANNEL_VOICE))
+                return usera.permissions & Permissions.CHANNEL_VOICE ? -1 : 1;
+            console.log(a + ":" + b + " - " + a.localeCompare(b));
+            return a.localeCompare(b);
+        });
+        len = keys.length;
+        $('#user-list').text('');
+        for(i = 0; i < len; ++i) {
+            k = keys[i];
+            color = 'text-info';
+            if (!users[k].active)
+                color = 'text-muted';
+            else if (users[k].permissions & Permissions.CHANNEL_OPERATOR)
+                color = 'text-danger';
+            else if (users[k].permissions & Permissions.CHANNEL_VOICE)
+                color = 'text-warning';
+            $('#user-list').append('<li role="presentation"><a href="#" class="'+ color +'">' + k + '</a></li>');
+        };
+    }
     
     // Alert close button
     $('.alertclose').click(function() {
@@ -267,4 +295,24 @@ $(function() {
     $('#registerModal').on('hidden.bs.modal', function() { 
         $('#register-form').trigger("reset");
     });
+    
+    // Support functions
+    function withValue(value) {
+        var d = withValue.d || (
+            withValue.d = {
+                enumerable: false,
+                writable: false,
+                configurable: false,
+                value: null
+            }
+        );
+        d.value = value;
+        return d;
+    }
+    
+    // Show alert (alert-id, alert-text-id, message)
+    function showAlert(id, txtid, msg) {
+        $(id).removeClass('hidden');
+        $(txtid).text(msg);
+    };
 });

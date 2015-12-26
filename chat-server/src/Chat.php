@@ -330,7 +330,7 @@ class Chat implements MessageComponentInterface
             'type' => 'join',
             'from' => $client->getUser()->getName(),
             'date' => time(),
-            'message' => null
+            'message' => $permissions
         ]);
         
         // Add event to database
