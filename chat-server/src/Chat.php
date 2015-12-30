@@ -79,9 +79,9 @@ class Chat implements MessageComponentInterface
         // Channel operations
         else if ($obj->type === 'join') {
             if ($this->parseJoin($client, $obj))
-                echo "{$client->getUser()->getName()} joined channel {$obj->message->chan}\n";
+                echo "{$client->getUser()->getName()} joined channel {$obj->to}\n";
             else
-                echo "{$client->getUser()->getName()} unable to join channel {$obj->message->chan}\n";
+                echo "{$client->getUser()->getName()} unable to join channel {$obj->to}\n";
         }
         else if ($obj->type === 'part') {
             if ($this->parsePart($client, $obj))
@@ -152,7 +152,7 @@ class Chat implements MessageComponentInterface
             $chans[$channame]['users'] = $this->db->getChannelUsers($channame);
             // Get active users
             foreach($arr['chan']->getUsers() as $u => $p) {
-                $chans[$channame]['users'][$u] = true;
+                $chans[$channame]['users'][$u]['active'] = true;
             }
             unset($chans[$channame]['chan']);
         }
@@ -185,6 +185,8 @@ class Chat implements MessageComponentInterface
 
     public function parseMessage($client, $obj)
     {
+        if (!$obj->to)
+            return;
         $message = htmlspecialchars($obj->message);
         
         // Sent to a channel
@@ -195,8 +197,8 @@ class Chat implements MessageComponentInterface
             else if (!$chan->hasUser($client->getUser()))
                 $error = ErrorCodes::USER_NOT_IN_CHANNEL;
             else if ($chan->hasMode(Permissions::MODE_MODERATED)
-                    && !$chan->userHasPermissions($client->getUser(), Permissions::CHANNEL_OPERATOR | CHANNEL_VOICE)
-                    && !$user->hasPermission(Permissions::SERVER_OPERATOR))
+                    && !$chan->userHasPermissions($client->getUser(), Permissions::CHANNEL_OPERATOR | Permissions::CHANNEL_VOICE)
+                    && !$client->getUser()->hasPermission(Permissions::SERVER_OPERATOR))
                 $error = ErrorCodes::CHANNEL_MODERATED;
             
             if (isset($error)) {
@@ -271,11 +273,11 @@ class Chat implements MessageComponentInterface
     {
         $chan = null;
         // Check channel format
-        if (!preg_match('/^([#][^\x07\x2C\s]{0,16})$/', $obj->message->chan)) {
+        if (!preg_match('/^([#][^\x07\x2C\s]{0,16})$/', $obj->to)) {
             $error = ErrorCodes::BAD_FORMAT;
         }
         else {
-            $chan = $this->getChannelOrCreate($obj->message->chan);
+            $chan = $this->getChannelOrCreate($obj->to);
             if (!$chan)
                 $error = ErrorCodes::UNKNOWN_ERROR;
         }
@@ -284,7 +286,7 @@ class Chat implements MessageComponentInterface
         if ($chan) {
             $permissions = $this->db->getUserChannelPermissions($client->getUser()->getUserId(), $chan->getName());
             if (!$client->getUser()->hasPermission(Permissions::SERVER_OPERATOR)) {
-                if ($chan->hasPassword() && $chan->getPassword() != $obj->message->password)
+                if ($chan->hasPassword() && $chan->getPassword() != $obj->message)
                     $error = ErrorCodes::CHANNEL_PASSWORD_MISMATCH;
                 else if ($chan->getUserCount() < $chan->getUserLimit())
                     $error = ErrorCodes::CHANNEL_USERLIMIT_REACHED;
@@ -304,6 +306,9 @@ class Chat implements MessageComponentInterface
         
         // We have a channel and the user has provided the correct password/userlimit not reached
         $chan->addUser($client->getUser(), $permissions);
+        
+        // Add user to channel database
+        $this->db->addUserToChannel($client->getUser(), $chan->getName());
         
         // Populate user list
         $users = $this->db->getChannelUsers($chan->getName());
@@ -365,7 +370,7 @@ class Chat implements MessageComponentInterface
         
         // Success string to client, do we need this?
         $client->send([
-            'type' => 'rmode',
+            'type' => 'rpart',
             'success' => true,
             'to' => $obj->to,
             'message' => null
@@ -395,6 +400,7 @@ class Chat implements MessageComponentInterface
         }
         
         $message = htmlspecialchars($obj->message);
+        $chan->setTopic($message);
         
         // Broadcast to channel
         $chan->send([
@@ -411,6 +417,9 @@ class Chat implements MessageComponentInterface
             'to' => $obj->to,
             'message' => $message
         ]);
+        
+        // Update channel in database
+        $this->db->setChannelInfo($chan->getName(), ['topic' => $message]);
         
         // Add event to database
         $this->db->addEvent($client->getUser()->getUserId(), $chan->getName(), 'topic', $obj->message);
@@ -456,6 +465,9 @@ class Chat implements MessageComponentInterface
             'to' => $obj->to,
             'message' => $mode
         ]);
+        
+        // Update channel in database
+        $this->db->setChannelInfo($chan->getName(), ['modes' => $mode]);
         
         // Add event to database
         $this->db->addEvent($client->getUser()->getUserId(), $chan->getName(), 'mode', $mode);
@@ -602,7 +614,7 @@ class Chat implements MessageComponentInterface
         $client->getUser()->broadcast([
             'type' => 'name',
             'date' => time(),
-            'message' => $obj->message
+            'message' => $oldname
         ]);
         
         // Add event to database

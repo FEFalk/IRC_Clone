@@ -1,12 +1,15 @@
 $(function() {
     var chat;
+    var chatuser = '';
     
     // Constants
     var Permissions = {};
+    Object.defineProperty(Permissions, 'MODE_PRIVATE',      withValue(1 << 0));
+    Object.defineProperty(Permissions, 'MODE_MODERATED',   withValue(1 << 1));
+    
     Object.defineProperty(Permissions, 'CHANNEL_VOICE',      withValue(1 << 0));
     Object.defineProperty(Permissions, 'CHANNEL_OPERATOR',   withValue(1 << 1));
     Object.defineProperty(Permissions, 'CHANNEL_BANNED',     withValue(1 << 2));
-    
     
     // Chat functionality
     var Chat = {
@@ -28,46 +31,119 @@ $(function() {
         },
         
         quit: function(quitmsg) {
-            conn.send(JSON.stringify({type: 'quit', message: quitmsg}));
+            chat.send(JSON.stringify({type: 'quit', message: quitmsg}));
             chat.close();
         },
         
         onMessage: function(e) {
             var data = JSON.parse(e.data);
-            if (data.success != null && data.success == false) {
-                console.log("Failed: " + e.data);
-                return;
+            
+            // Event messages
+            if (data.type === 'message') {
+                Chat.addMessage(data.to, data.from, data.message, data.date);
             }
-            // Response messages
-            if (data.type == "rlogin") {
-                if (data.success == true) {
-                    console.log("Success!\n");
-                    $.each(data.message.channels, function(key, val) {
-                        Chat.addChannel(key);
-                        Chat.setChannelTopic(key, val.topic);
-                        Chat.setChannelModes(key, val.modes);
-                        Chat.setUserList(key, val.users);
+            else if (data.type === 'topic') {
+                Chat.setChannelTopic(data.to, data.message);
+            }
+            else if (data.type === 'online') {
+                if (data.from === chatuser) return;
+                $('.channel-item[data-channel="' + data.to + '"]').data('users')[data.from].active = true;
+                Chat.addMessage(data.to, 'ONLINE', data.from + ' has come online!', data.date);
+                if (data.to === $('.channel-item:not(.hidden)').attr('data-channel'))
+                    updateActiveUserlist();
+            }
+            else if (data.type === 'offline') {
+                if (data.from === chatuser) return;
+                $('.channel-item[data-channel="' + data.to + '"]').data('users')[data.from].active = false;
+                Chat.addMessage(data.to, 'OFFLINE', data.from + ' has gone offline!', data.date);
+                if (data.to === $('.channel-item:not(.hidden)').attr('data-channel'))
+                    updateActiveUserlist();
+            }
+            else if (data.type === 'join') {
+                Chat.addUser(data.to, data.from, data.message, true);
+                Chat.addMessage(data.to, 'JOIN', data.from + ' has joined the channel!', data.date);
+                if (data.to === $('.channel-item:not(.hidden)').attr('data-channel'))
+                    updateActiveUserlist();
+            }
+            else if (data.type === 'part') {
+                Chat.removeUser(data.to, data.from);
+                Chat.addMessage(data.to, 'PART', data.from + ' has left the channel!', data.date);
+                if (data.to === $('.channel-item:not(.hidden)').attr('data-channel'))
+                    updateActiveUserlist();
+            }
+            else if (data.type === 'kick') {
+                Chat.removeUser(data.to, data.message);
+                Chat.addMessage(data.to, 'KICK', data.from + ' was kicked from the channel by ' + data.from + '!', data.date);
+                if (data.to === $('.channel-item:not(.hidden)').attr('data-channel'))
+                    updateActiveUserlist();
+            }
+            else if (data.type === 'umode') {
+                var mode = parseInt(data.message.mode) || 0;
+                if (mode & Permissions.CHANNEL_BANNED)
+                    Chat.removeUser(data.to, data.from);
+                else
+                    $('.channel-item[data-channel="' + data.to + '"]').data('users')[data.message.user].permissions = mode;
+                Chat.addMessage(data.to, 'USERMODE', data.from + ' changed usermode of ' + data.message.user + ' to ' + data.message.mode + '!', data.date);
+                if (data.to === $('.channel-item:not(.hidden)').attr('data-channel'))
+                    updateActiveUserlist();
+            }
+            else if (data.type === 'name') {
+                var info = $('.channel-item[data-channel="' + data.to + '"]').data('users')[data.message];
+                Chat.removeUser(data.to, data.message);
+                Chat.addUser(data.to, data.from, info.permissions, info.active);
+                Chat.addMessage(data.to, 'NAME', data.message + ' changed name to ' + data.from + '!', data.date);
+            }
+            else if (data.type === 'topic') {
+                Chat.setChannelTopic(data.to, data.message);
+                Chat.addMessage(data.to, 'TOPIC', data.from + ' changed the channel topic to ' + data.message + '!', data.date);
+            }
+            else if (data.type === 'mode') {
+                Chat.setChannelModes(data.to, data.message);
+                Chat.addMessage(data.to, 'MODE', data.from + ' changed channel mode to ' + data.message + '!', data.date);
+            }
+            else if (data.type === 'loginmsgs') {
+                $.each(data.message, function(name, arr) {
+                    $.each(arr, function(key, val) {
+                        Chat.addMessage(name, val.from, val.message, val.date);
                     });
-                    $('#channel-list button').first().click();
-                }
-                else {
-                    console.log("Failed: " + data.message + ".\n");
-                }
+                });
             }
-            else if (data.type == "rjoin") {
+            
+            // Response messages
+            else if (data.type === "rlogin") {
+                if (data.success === false) {
+                    showAlert('alert', 'txtAlert', 'Login error: ' + data.message);
+                    return;
+                }
+                
+                chatuser = data.message.name;
+                $.each(data.message.channels, function(key, val) {
+                    Chat.addChannel(key);
+                    Chat.setChannelTopic(key, val.topic);
+                    Chat.setChannelModes(key, val.modes);
+                    Chat.setUserList(key, val.users);
+                });
+                $('#channel-list button').first().click();
+            }
+            else if (data.type === "rjoin") {
+                if (data.success === false) {
+                    showAlert('alert', 'txtAlert', 'Join error: ' + data.message);
+                    return;
+                }
+                
                 Chat.addChannel(data.message.name);
                 Chat.setChannelTopic(data.message.name, data.message.topic);
                 Chat.setChannelModes(data.message.name, data.message.modes);
                 Chat.setUserList(data.message.name, data.message.users);
                 $('#channel-list button[data-channel="' + data.message.name + '"]').click();
             }
-            
-            // Event messages
-            else if (data.type == "message") {
-                Chat.addMessage(data.to, data.from, data.message);
-            }
-            else if (data.type == "topic") {
-                Chat.setChannelTopic(data.to, data.message);
+            else if (data.type === 'rname') {
+                if (data.success === false) {
+                    showAlert('alert', 'txtAlert', 'Name change error: ' + data.message);
+                    return;
+                }
+                chatuser = data.from;
+                // TODO: something
             }
 
             console.log(e.data);
@@ -100,7 +176,21 @@ $(function() {
         },
         
         setChannelModes: function(chan, modes) {
-            $('.channel-item[data-channel="' + chan + '"] span[data-type="modes"]').text(modes);
+            var mode = parseInt(modes) || 0;
+            var abbr = '', txt = '';
+            if (mode & Permissions.MODE_PRIVATE) {
+                abbr += '[p]rivate ';
+                txt += 'p';
+            }
+            if (mode & Permissions.MODE_MODERATED) {
+                abbr += '[m]oderated ';
+                txt += 'm';
+            }
+            
+            if (txt.length > 0)
+                txt = '+' + txt;
+            
+            $('.channel-item[data-channel="' + chan + '"] abbr[data-type="modes"]').attr('title', abbr).text(txt);
         },
         
         setUserList: function(chan, userlist) {
@@ -113,7 +203,14 @@ $(function() {
             $('.channel-item[data-channel="' + chan + '"]').data('users')[name] = {active: active, permissions: permissions};
         },
         
-        addMessage: function(chan, user, message) {
+        removeUser: function(chan, name) {
+            delete $('.channel-item[data-channel="' + chan + '"]').data('users')[name];
+        },
+        
+        addMessage: function(chan, user, message, date) {
+            date = typeof date !== 'undefined' ? date : Date.now() / 1000 | 0;
+            if (!$('#channel-list > button[data-channel="' + chan + '"]').length)
+                Chat.addChannel(chan);
             var chandiv, doscroll = false;
             if (chan == '')
                 chandiv = $('.channel-item:not(.hidden)');
@@ -127,11 +224,11 @@ $(function() {
             /*Parse it!*/
             var msg = parseMessage(message);
 
-            var msg = $('<div class="row"><strong class="col-md-2"><a href="" class="text-danger">' + user + '</a></strong><span class="col-md-10">' + msg + '</span></div>');
-            msg.appendTo(chatitem);
+            var msgobj = $('<div class="row"><strong class="col-md-2"><a href="" class="text-danger">' + user + '</a></strong><span class="col-md-10">' + msg + '</span></div>');
+            msgobj.appendTo(chatitem);
            
             if (chandiv.hasClass('hidden')) {
-                $('span', chanlistitem).text(parseInt(($('span', chanlistitem).text()) || 0) + 1);
+                $('span', chanlistitem).text(parseInt(($('span', chanlistitem).text()) || "0") + 1);
             }
             else if (doscroll) {
                 chatitem.scrollTop(chatitem[0].scrollHeight);
@@ -189,13 +286,12 @@ $(function() {
         // Sort keys based on active status, permissions and name
         keys.sort(function(a, b){
             var usera = users[a], userb = users[b];
-            if (!usera.active ^ !userb.active)
+            if (usera.active !== userb.active)
                 return (usera.active ? -1 : 1);
-            if (!(usera.permissions & Permissions.CHANNEL_OPERATOR) ^ !(userb.permissions & Permissions.CHANNEL_OPERATOR))
+            if (!(usera.permissions & Permissions.CHANNEL_OPERATOR) !== !(userb.permissions & Permissions.CHANNEL_OPERATOR))
                 return usera.permissions & Permissions.CHANNEL_OPERATOR ? -1 : 1;
-            if (!(usera.permissions & Permissions.CHANNEL_VOICE) ^ !(userb.permissions & Permissions.CHANNEL_VOICE))
+            if (!(usera.permissions & Permissions.CHANNEL_VOICE) !== !(userb.permissions & Permissions.CHANNEL_VOICE))
                 return usera.permissions & Permissions.CHANNEL_VOICE ? -1 : 1;
-            console.log(a + ":" + b + " - " + a.localeCompare(b));
             return a.localeCompare(b);
         });
         len = keys.length;
@@ -218,29 +314,59 @@ $(function() {
         $(this).parent().addClass('hidden');
     });
     
+    var chanHasUser = function(chan, user) {
+        if (!$('.channel-item[data-channel="' + chan + '"]').data('users').length)
+            return false;
+        $('.channel-item[data-channel="' + chan + '"]').data('users').each(function(name, arr) {
+            if (name.toUpperCase() === user.toUpperCase())
+                return true;
+        });
+        return false;
+    }
+    
     // Send message
     var sendMessage = function() {
         var msg = $('#chat-input').val();
         var activechan = $('.channel-item:not(.hidden)').attr('data-channel');
-
+        
         // If message is a command
-        if (msg.charAt(0) == '/') {
+        if (msg.charAt(0) === '/') {
             var split = msg.split(' ');
-            var cmd = split[0].substr(1),
-                arg = split.length > 1 ? split[1] : ''
+            var to = activechan,
+                cmd = split[0].substr(1),
+                arg = split.length > 1 ? split[1] : '',
                 msg = split.length > 2 ? split.splice(2).join(' ') : '';
             
-            console.log('/' + cmd + ': ' + arg + ' - ' + msg);
+            if (arg[0] === '#' || chanHasUser(activechan, arg)) {
+                to = arg;
+            }
+            else {
+                msg = arg.concat(' ').concat(msg);
+            }
             
-            if (cmd == 'join') {
-                chat.send(JSON.stringify({type: 'join', message: {chan: arg, password: msg}}));
-            } else if (cmd == 'quit') {
-                chat.send(JSON.stringify({type: 'quit', message: arg}));
+            console.log('cmd: ' + cmd + '| to: ' + to + '| arg: ' + arg + '| msg: ' + msg);
+            
+            if (cmd === 'part') {
+                chat.send(JSON.stringify({type: 'part', to: to, message: msg}));
+                // TODO: Remove channel div and button
+            }
+            else if (cmd === 'join' || cmd === 'topic' || cmd === 'mode' || cmd === 'kick'
+                    || cmd === 'name' || cmd === 'nick')
+            {
+                chat.send(JSON.stringify({type: cmd, to: to, message: msg}));
+            }
+            else if (cmd === 'umode') {
+                if (to[0] === '#') {
+                    var msgsplit = msg.split(' ');
+                    chat.send(JSON.stringify({type: 'umode', to: to, message: { user: msgsplit[0], mode: msgsplit[1]}}));
+                }
+                else {
+                    chat.send(JSON.stringify({type: 'umode', to: activechan, message: { user: to, mode: msg}}));
+                }
+            }
+            else if (cmd === 'quit') {
+                chat.send(JSON.stringify({type: 'quit', message: msg}));
                 chat.close();
-            } else if (cmd == 'topic') {
-                //makes it possible to have space:s in the topic message
-                var topic = arg.concat(" ").concat(msg);
-                chat.send(JSON.stringify({type: 'topic', to: activechan, message: topic}));
             }
         }
         else {
@@ -296,7 +422,11 @@ $(function() {
         $('#register-form').trigger("reset");
     });
     
-    // Support functions
+    /**
+     * Support functions
+     */
+    
+    // Add constant properties to an object
     function withValue(value) {
         var d = withValue.d || (
             withValue.d = {

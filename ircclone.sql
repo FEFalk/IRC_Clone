@@ -18,24 +18,20 @@ CREATE  TABLE IF NOT EXISTS `ircclone`.`users` (
   `last_login` BIGINT UNSIGNED NULL ,
   `last_logout` BIGINT UNSIGNED NULL ,
   PRIMARY KEY (`id`) )
-AUTO_INCREMENT = 1;
+AUTO_INCREMENT = 0;
 
 
 -- -----------------------------------------------------
 -- Table `ircclone`.`events`
 -- -----------------------------------------------------
 CREATE  TABLE IF NOT EXISTS `ircclone`.`events` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `userid` INT UNSIGNED NOT NULL ,
   `to` VARCHAR(16) NULL ,
   `type` VARCHAR(12) NULL ,
   `message` VARCHAR(255) NULL ,
   `date` BIGINT UNSIGNED NULL ,
-  PRIMARY KEY (`userid`) ,
-  CONSTRAINT `events_userid`
-    FOREIGN KEY (`userid` )
-    REFERENCES `ircclone`.`users` (`id` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+  PRIMARY KEY (`id`) )
 ENGINE = InnoDB;
 
 
@@ -87,5 +83,14 @@ SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 START TRANSACTION;
 USE `ircclone`;
 INSERT INTO `ircclone`.`users` (`id`, `name`, `password`, `email`, `permissions`, `last_login`, `last_logout`) VALUES (0, 'SERVER', '', NULL, 7, NULL, NULL);
+
+COMMIT;
+
+-- -----------------------------------------------------
+-- Data for table `ircclone`.`channels`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `ircclone`;
+INSERT INTO `ircclone`.`channels` (`name`, `modes`, `topic`, `password`, `userlimit`) VALUES ('#Default', 0, 'Welcome to the Default channel! Type /help for help with the chat.', '', 0);
 
 COMMIT;

@@ -33,6 +33,7 @@ class Database
         $connstring = 'mysql:host='. $this->ip .';dbname='. $this->database .';';
         $this->db = new PDO($connstring, $this->username, $this->password,
             array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''));
+        $this->db->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
     }
     
     /**
@@ -92,18 +93,25 @@ class Database
     public function getOfflineMessages(User $user, $limit = 30)
     {
         $result = array();
-        $stmt = $this->db->prepare('
+        $stmt = $this->db->prepare("
             SELECT `users`.`name` AS `from`, `message`, `date`
             FROM `events`
             INNER JOIN `users` ON `users`.`id` = `userid`
-            WHERE `type` = ? AND `to` = ? AND `date` < ?
-            LIMIT ?;');
-        $stmt->execute(array('message', $user->getName(), $user->getLastLogout(), PHP_INT_MAX));
-        $result[$user->getName()] = $stmt->fetchAll();
+            WHERE `type` = 'message' AND `to` = :to AND `date` > :date
+            LIMIT :limit;");
+        $stmt->bindParam(':to', $user->getName(), PDO::PARAM_STR);
+        $stmt->bindParam(':date', $user->getLastLogout(), PDO::PARAM_INT);
+        $temp = PHP_INT_MAX;
+        $stmt->bindParam(':limit', $temp, PDO::PARAM_INT);
+        $stmt->execute();
+        $result[$user->getName()] = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $stmt->closeCursor();
-        foreach($user->getChannels() as $name => $arr) {
-            $stmt->execute(array('message', $name, $user->getLastLogout(), $limit));
-            $result[$name] = $stmt->fetchAll();
+        foreach($user->getChannels(true) as $name => $arr) {
+            $stmt->bindParam(':to', $name, PDO::PARAM_STR);
+            $stmt->bindParam(':date', $user->getLastLogout(), PDO::PARAM_INT);
+            $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            $result[$name] = $stmt->fetchAll(PDO::FETCH_ASSOC);
             $stmt->closeCursor();
         }
         return $result;
@@ -121,6 +129,27 @@ class Database
         $chan = $stmt->fetch();
         $stmt->closeCursor();
         return $chan;
+    }
+    
+    /**
+     * Change channel info
+     * @param string $chan The channel name
+     * @param array $info (modes, topic, password, userlimit)
+     */
+    public function setChannelInfo($chan, $info)
+    {
+        $query = 'UPDATE `channels` SET ';
+        foreach($info as $key => $val)
+            $query .= '`' . $key . '` = :'.$key.' ';
+        $query .= 'WHERE `name` = :name;';
+        $stmt = $this->db->prepare($query);
+        foreach($info as $key => $val)
+            $stmt->bindParam(':'.$key, $val, gettype($val) == 'integer' ? PDO::PARAM_INT : PDO::PARAM_STR);
+        $stmt->bindParam(':name', $chan, PDO::PARAM_STR);
+        $stmt->execute();
+        $c = $stmt->rowCount();
+        $stmt->closeCursor();
+        return $c == 1;
     }
     
     /**
@@ -182,10 +211,29 @@ class Database
         return $c == 1;
     }
     
+    /**
+     * Change user name
+     * @param User $user User object
+     * @param string $newname The new name
+     */
     public function changeUserName(User $user, $newname)
     {
         $stmt = $this->db->prepare('UPDATE `users` SET `name` = ? WHERE `id` = ?;');
         $stmt->execute(array($newname, $user->getUserId()));
+        $c = $stmt->rowCount();
+        $stmt->closeCursor();
+        return $c == 1;
+    }
+    
+    /**
+     * Add user to channel
+     * @param User $user User object
+     * @param string $chan channel
+     */
+    public function addUserToChannel(User $user, $chan)
+    {
+        $stmt = $this->db->prepare('INSERT INTO `user_channels` (`user`, `channel`, `permissions`) VALUES(?, ?, 0);');
+        $stmt->execute(array($user->getUserId(), $chan));
         $c = $stmt->rowCount();
         $stmt->closeCursor();
         return $c == 1;
