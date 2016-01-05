@@ -3,7 +3,7 @@
 namespace IRCClone\Connection;
 
 use IRCClone\Chat;
-use IRCClone\User\User;
+use IRCClone\User;
 use Ratchet\ConnectionInterface;
 
 class ChatConnection implements ChatConnectionInterface
@@ -31,6 +31,7 @@ class ChatConnection implements ChatConnectionInterface
     
     public function login($username, $password)
     {
+        // Already logged in?
         if ($this->user)
             return;
         
@@ -47,60 +48,36 @@ class ChatConnection implements ChatConnectionInterface
         $userinfo['channels'] = $chans;
         unset($userinfo['password']);
         
-        // Create user object
+        // Create User object
         $this->user = new User($userinfo, $this, $this->chat);
+        $this->chat->db->loginUser($this->user);
+        
+        // Join default channel if empty
+        if (count($chans) == 0) {
+            $perms = $this->chat->db->getUserChannelPermissions($this->user->getName(), $this->chat->getDefaultChannel()->getName());
+            $this->user->joinChannel($this->chat->getDefaultChannel(), $perms);
+        }
         return $this->user;
     }
     
-    public function logout()
+    public function logout($msg)
     {
-        foreach($this->getUser()->getChannels() as $chan) {
+        if (!$this->user)
+            return;
+        
+        foreach($this->user->getChannels() as $chan) {
             // Send logout to channel users
-            $chan->send([
-                    'type' => 'offline',
-                    'from' => $this->name,
-                    'message' => null
-                ]);
+            $chan['chan']->send([
+                'type' => 'offline',
+                'from' => $this->user->getName(),
+                'message' => $msg
+            ]);
                 
             // Remove user from active users in channel
-            $chan->removeUser($this->getUser());
-        }
-    }
-
-    public function setName($name, $bot = false)
-    {
-        // TODO: Move to onMessage
-        $error = false;
-        // Check if the name is invalid or already exists
-        if (!preg_match('/\A[a-z_\-\[\]\\^{}|`][a-z0-9_\-\[\]\\^{}|`]{2,15}\z/i', $name))
-        {
-            $error = 'invalid';
-        }
-        else if ($this->repository->getClientByName($name) !== null)
-        {
-            $error = 'exists';
+            $chan['chan']->removeUser($this->user);
         }
         
-        if ($error)
-        {
-            $this->send([
-                'type'    => 'setname',
-                'success' => false,
-                'message' => $error
-            ]);
-        }
-        else
-        {
-            $this->name = $name;
-
-            $this->send([
-                'type'  => 'setname',
-                'success' => true,
-                'message' => $this->name
-            ]);
-            
-            
-        }
+        $this->chat->db->logoutUser($this->user);
     }
 
     public function send(array $data)

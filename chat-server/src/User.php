@@ -1,12 +1,12 @@
 <?php
 
-namespace IRCClone\User;
+namespace IRCClone;
 
 use IRCClone\Chat;
 use IRCClone\Connection\ChatConnection;
 use IRCClone\Channel;
 
-class User implements UserInterface
+class User
 {
     private $connection;
     private $chat;
@@ -17,6 +17,8 @@ class User implements UserInterface
     private $name;
     private $email;
     private $permissions; // Server permissions
+    private $last_login;
+    private $last_logout;
     
     public function __construct(array $userinfo, ChatConnection $conn, Chat $chat)
     {
@@ -28,6 +30,12 @@ class User implements UserInterface
         $this->name = $userinfo['name'];
         $this->email = $userinfo['email'];
         $this->permissions = $userinfo['permissions'];
+        $this->last_login = time();
+        $this->last_logout = $userinfo['last_logout'];
+        
+        foreach($userinfo['channels'] as $c => $p) {
+            $this->joinChannel($this->chat->getChannelOrCreate($c), $p);
+        }
     }
     
     // Broadcast to user channels
@@ -46,6 +54,7 @@ class User implements UserInterface
     
     public function joinChannel(Channel $chan, $permissions)
     {
+        $chan->addUser($this, $permissions);
         $this->channels->attach((object) array('chan' => $chan, 'permissions' => $permissions));
     }
     
@@ -68,9 +77,19 @@ class User implements UserInterface
         return false;
     }
     
-    public function getChannels()
+    public function getChannels($name_only = false)
     {
-        return $this->channels;
+        $chans = array();
+        foreach($this->channels as $ch) {
+            $chans[$ch->chan->getName()] = array(
+                'permissions' => $ch->permissions,
+                'modes' => $ch->chan->getModes(),
+                'topic' => $ch->chan->getTopic());
+                
+            if (!$name_only)
+                $chans[$ch->chan->getName()]['chan'] = $ch->chan;
+        }
+        return $chans;
     }
     
     public function getUserId()
@@ -106,5 +125,15 @@ class User implements UserInterface
     public function hasPermission($flag)
     {
         return $this->permissions & $flag;
+    }
+    
+    public function getLastLogin()
+    {
+        return $this->last_login;
+    }
+    
+    public function getLastLogout()
+    {
+        return $this->last_logout;
     }
 }

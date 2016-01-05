@@ -1,13 +1,10 @@
 html{
-  /*background: url(../images/home_background.jpg) no-repeat center center fixed; 
-=======
-  background: url(../images/home_background.jpg) no-repeat center center fixed; 
->>>>>>> origin/master
-  -webkit-background-size: cover;
-  -moz-background-size: cover;
-  -o-background-size: cover;
-  background-size: cover;*/
-  background: #3C3C3E;
+    /*background: url(../images/home_background.jpg) no-repeat center center fixed; 
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;*/
+    background: #3C3C3E;
 }
 
 body, html {
@@ -15,31 +12,65 @@ body, html {
 }
 
 body {
-  padding-top: 50px;
-  background : none;
-}
-.starter-template {
-  padding: 40px 15px;
-  text-align: center;
-  color : white; 
-}
-.container{
-
+    background : none;
 }
 
-#primaryButton{
-    font-size : 10pt;
-    height: 80%%;
+#content {
+    background: #689096;
+    border-radius: 8px;
+    height: 90%;
 }
 
-#content{
-  background: #689096;
-  border-radius: 8px;
-  height: 90%;
+#chat-input {
+    line-height: 1;
+    resize: none;
 }
+
+.chat {
+    overflow-y: scroll;
+    height: 100%;
+}
+
+#channel-container {
+    height: 100%;
+}
+
+.channel-item {
+    height: 100%;
+}
+
+.row {
+    padding-top: 10px;
+}
+
+#chat-frame strong, #user-list li {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+#channel-container .row {
+    border-bottom: 1px solid #ccc;
+}
+
+#chat-frame {
+    height: 90%;
+}
+
+#channel-list button {
+    text-align: left;
+}
+
+#channel-list .badge {
+    position: absolute;
+    top: 25%;
+    right: 10px;
+}
+
+.row-no-padding > .panel {
+   padding: 0 !important;
+   margin: 0 !important;
+}
+
 .top-buffer {
-  margin-top:1%;
+  margin-top: 1%;
 }
-
-#grey-text {
-  color:#57575B;
