@@ -183,6 +183,15 @@ class Database
         return $result != null ? $result['permissions'] : 0;
     }
     
+    public function setUserChannelPermissions($chan, $userid, $permissions)
+    {
+        $stmt = $this->db->prepare('UPDATE `user_channels` SET `permissions` = ? WHERE `user` = ? AND `channel` = ?;');
+        $stmt->execute(array($permissions, $userid, $chan));
+        $c = $stmt->rowCount();
+        $stmt->closeCursor();
+        return $c == 1;
+    }
+    
     /**
      * Login a user
      * @param User $user User object

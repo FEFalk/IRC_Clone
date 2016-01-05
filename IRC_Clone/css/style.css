@@ -41,6 +41,7 @@ body {
 
 .row {
     padding-top: 10px;
+    word-break: break-all;
 }
 
 #chat-frame strong, #user-list li {

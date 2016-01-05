@@ -223,8 +223,9 @@ $(function() {
            
             /*Parse it!*/
             var msg = parseMessage(message);
+            var dateobj = new Date(date*1000);
 
-            var msgobj = $('<div class="row"><strong class="col-md-2"><a href="" class="text-danger">' + user + '</a></strong><span class="col-md-10">' + msg + '</span></div>');
+            var msgobj = $('<div class="row"><strong class="col-md-2">[' + ("0" + dateobj.getHours()).slice(-2) + ":" + ("0" + dateobj.getMinutes()).slice(-2) + ":" + + ("0" + dateobj.getSeconds()).slice(-2)  + ']<a href="" class="text-danger">' + user + '</a></strong><span class="col-md-10">' + msg + '</span></div>');
             msgobj.appendTo(chatitem);
            
             if (chandiv.hasClass('hidden')) {

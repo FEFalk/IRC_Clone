@@ -21,8 +21,14 @@ class Chat implements MessageComponentInterface
         $this->db = $db;
         
         // Initialise the default channel
-        $this->defaultchan = new Channel("#Default", $this);
-        $this->defaultchan->setTopic('Welcome to the Default channel! Type /help for help with the chat.');
+        $ch = $this->db->getChannelInfo('#Default');
+        if (!$ch) {
+            echo "Unable to create default channel #Default!\n";
+            return;
+        }
+        $this->defaultchan = new Channel($ch['name'], $this);
+        $this->defaultchan>setTopic($ch['topic']);
+        $this->defaultchan>addMode($ch['modes']);
         $this->channels->attach($this->defaultchan);
         echo "Created default channel {$this->defaultchan->getName()}\n";
     }
@@ -527,7 +533,7 @@ class Chat implements MessageComponentInterface
             $error = ErrorCodes::CHANNEL_NOT_EXIST;
         else if (!$user)
             $error = ErrorCodes::USER_NOT_EXIST;
-        else if (!$chan->hasUser($user))
+        else if (!$chan->hasUser($user->getUser()))
             $error = ErrorCodes::USER_NOT_IN_CHANNEL;
         else if (!$chan->userHasPermissions($client->getUser(), Permissions::CHANNEL_OPERATOR)
                 && !$client->getUser()->hasPermission(Permissions::SERVER_OPERATOR))
@@ -546,7 +552,8 @@ class Chat implements MessageComponentInterface
             return false;
         }
         
-        $chan->setUserPermissions($user, $mode);
+        $chan->setUserPermissions($user->getUser(), $mode);
+        $this->db->setUserChannelPermissions($chan->getName(), $user->getUser()->getName(), $mode);
         
         // Broadcast to channel
         $chan->send([
@@ -554,7 +561,7 @@ class Chat implements MessageComponentInterface
             'from' => $client->getUser()->getName(),
             'date' => time(),
             'message' => [
-                'user' => $user->getName(),
+                'user' => $user->getUser()->getName(),
                 'mode' => $mode
             ]
         ]);
@@ -565,7 +572,7 @@ class Chat implements MessageComponentInterface
             'success' => true,
             'to' => $chan->getName(),
             'message' => [
-                'user' => $user->getName(),
+                'user' => $user->getUser()->getName(),
                 'mode' => $mode
             ]
         ]);
@@ -575,7 +582,7 @@ class Chat implements MessageComponentInterface
             $chan->removeUser($user);
         
         // Add event to database
-        $this->db->addEvent($client->getUser()->getUserId(), $chan->getName(), 'umode', $user->getName() + ':' + $mode);
+        $this->db->addEvent($client->getUser()->getUserId(), $chan->getName(), 'umode', $user->getUser()->getName() + ':' + $mode);
     }
     
     public function parseNameChange($client, $obj)
