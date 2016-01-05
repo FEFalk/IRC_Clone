@@ -195,3 +195,4 @@ FakesAssemblies/
 *.opt
 *.sln
 /IRC_Clone/IRC_Clone.phpproj
+/chat-server/chatserver.phpproj
