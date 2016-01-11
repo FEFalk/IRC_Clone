@@ -36,4 +36,14 @@ class Database
         $stmt->closeCursor();
         return $rc == 1;
     }
+	   
+	
+	public function search($searchWord)
+	{
+		$stmt = $this->db->prepare('SELECT `name` FROM `channels` WHERE `name` = ?;');
+        $stmt->execute(array($searchWord));
+        $result = $stmt->fetch();
+        $stmt->closeCursor();
+        return $result;		
+	}
 }

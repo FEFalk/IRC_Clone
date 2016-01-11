@@ -422,6 +422,40 @@ $(function() {
     $('#registerModal').on('hidden.bs.modal', function() { 
         $('#register-form').trigger("reset");
     });
+	
+	$('#search-form-submit').click(function(event) {
+		
+        event.preventDefault();
+        
+        var inputs = $(this).find("input, select");
+        inputs.prop('disabled', true);
+        
+        var formdata = $('#search-form').serialize();
+		console.log(formdata);
+        // TODO: Validate formdata
+		
+        $.ajax({
+            method: 'POST',
+            url: 'search.php',
+            dataType: 'json',
+            data: formdata
+        })
+		.done(function(response) {
+            inputs.prop('disabled', false);
+            if (response.success) {				
+                console.log(response.message.name);
+            }
+			else {
+                showAlert('#search-alert', '#search-txt-alert', 'Unable to register: ' + response.message);
+            }
+			
+        })
+        .fail(function(msg) {
+            inputs.prop('disabled', false);
+        });
+		
+    });
+
     
     /**
      * Support functions

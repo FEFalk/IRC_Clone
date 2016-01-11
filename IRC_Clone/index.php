@@ -6,12 +6,13 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="js/autoresize.js"></script>
     <script type="text/javascript" src="js/chat.js"></script>
+	<script type="text/javascript" src="js/login.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700,800'>
 </head>
 <body>
-    <nav class="navbar navbar-inverse navbar-static-top">
+	<nav class="navbar navbar-inverse navbar-static-top">
         <div class="container">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
@@ -31,17 +32,31 @@
                     <div class="form-group">
                         <input id="login-password" type="password" placeholder="Password" class="form-control">
                     </div>
-                    <div class="form-group hidden"></div>
-                    <button type="submit" class="btn btn-success">Sign in</button>
+                <div class="form-group hidden"></div>
+                    <button id="btnSignIn" type="submit" class="btn btn-success" >Sign in</button>
                     <button id="btnRegister" type="button" class="btn" data-toggle="modal" data-target="#registerModal">Register</button>
                 </form>
-            </div>
+				<form id="loggedIn-form" class="navbar-form navbar-right">
+					<div class="form-group">
+						<p class="text-info" id="loggedInText">Logged in as: <span class="text-warning" id='loggedInName'></span></p>
+					</div>
+					<div class="form-group hidden"></div>
+					<button id="btnLogout" type="submit" class="btn btn-success">Logout</button>
+				</form>
+				</div>
+			</div>
         </div>
     </nav>
-    
+    <div id="searchDiv">
+	<div class="alert alert-danger alert-dismissible hidden" id="search-alert" role="alert"><button type="button" class="close alertclose" aria-label="Close"><span aria-hidden="true">&times;</span></button><span id="search-txt-alert"></span></div>
+		<form id="search-form" class="form-horizontal">		
+			<input class="form-control" type="text" name="searchWord" id="searchWord" placeholder="Search: ">
+			<button type="button" class="btn btn-primary" id="search-form-submit">Submit</button>	
+		</form>
+	</div>
     <div class="top-buffer container-fluid row-fluid row-no-padding" id="content">
         <div class="alert alert-danger alert-dismissible hidden" id="alert" role="alert"><button type="button" class="close alertclose" aria-label="Close"><span aria-hidden="true">&times;</span></button><span id="txtAlert">Wow big alert warning warning hello</span></div>
-        <div class="col-md-2 panel btn-group-vertical nav" role="group" aria-label="channels" id="channel-list">
+        <div class="col-md-2 panel btn-group-vertical nav" role="group" aria-label="channels" id="channel-list">	
         </div>
         <div class="col-md-8 panel panel-default" style="background-color: #FFFFFF;" id="chat-frame">  
             <div id="channel-container">
