@@ -59,6 +59,7 @@ class Channel
         while ($this->users->valid()) {
             if ($this->users->current() === $user)
                 return $this->users->getInfo() & $permissions;
+            $this->users->next();
         }
         return false;
     }

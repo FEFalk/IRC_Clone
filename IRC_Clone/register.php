@@ -24,7 +24,6 @@ if(isset($_POST['username']) && isset($_POST['password'])) {
     
 	if($userinfo) {
         echo json_encode(['success' => false, 'message' => 'user_exists']);
-        $("#regErrorMsg").html('#reg-alert', '#reg-txt-alert', 'Unable to register: ' + response.message);
     } 
     else {
         if ($db->registerUser($_POST['username'], password_hash($_POST['password'], PASSWORD_BCRYPT), $email))

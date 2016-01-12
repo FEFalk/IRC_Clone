@@ -38,6 +38,8 @@ $(function() {
         onMessage: function(e) {
             var data = JSON.parse(e.data);
             
+            console.log(e.data);
+            
             // Event messages
             if (data.type === 'message') {
                 Chat.addMessage(data.to, data.from, data.message, data.date);
@@ -73,7 +75,7 @@ $(function() {
             }
             else if (data.type === 'kick') {
                 Chat.removeUser(data.to, data.message);
-                Chat.addMessage(data.to, 'KICK', data.from + ' was kicked from the channel by ' + data.from + '!', data.date);
+                Chat.addMessage(data.to, 'KICK', data.message + ' was kicked from the channel by ' + data.from + '!', data.date);
                 if (data.to === $('.channel-item:not(.hidden)').attr('data-channel'))
                     updateActiveUserlist();
             }
@@ -92,6 +94,8 @@ $(function() {
                 Chat.removeUser(data.to, data.message);
                 Chat.addUser(data.to, data.from, info.permissions, info.active);
                 Chat.addMessage(data.to, 'NAME', data.message + ' changed name to ' + data.from + '!', data.date);
+                if (data.to === $('.channel-item:not(.hidden)').attr('data-channel'))
+                    updateActiveUserlist();
             }
             else if (data.type === 'topic') {
                 Chat.setChannelTopic(data.to, data.message);
@@ -148,8 +152,6 @@ $(function() {
                 chatuser = data.from;
                 // TODO: something
             }
-
-            console.log(e.data);
         },
         
         addChannel: function(name) {
@@ -207,6 +209,12 @@ $(function() {
         },
         
         removeUser: function(chan, name) {
+            if (name === chatuser) {
+                $('#channel-list > button[data-channel="' + chan + '"]').remove();
+                if (!$('.channel-item:not(.hidden)').length)
+                    $('#channel-list button').first().click();
+                return;
+            }
             delete $('.channel-item[data-channel="' + chan + '"]').data('users')[name];
         },
         
@@ -221,15 +229,16 @@ $(function() {
                 chandiv = $('.channel-item[data-channel="' + chan + '"]');
             var chanlistitem = $('#channel-list > button[data-channel="'+chan+'"]');
             var chatitem = $('div.chat', chandiv);
-            if (chatitem[0].scrollHeight - chatitem.scrollTop() == chatitem.outerHeight())
+            if (chatitem[0].scrollHeight - chatitem.scrollTop() == chatitem.outerHeight() || chatitem[0].scrollHeight - chatitem.scrollTop() == chatitem.outerHeight() - 1)
                 doscroll = true;
            
             /*Parse it!*/
             var msg = parseMessage(message);
             var dateobj = new Date(date*1000);
 
-            var msgobj = $('<div class="row"><strong class="col-md-2"><span class="timestamp">[' + ("0" + dateobj.getHours()).slice(-2) + ":" + ("0" + dateobj.getMinutes()).slice(-2) + ":" + + ("0" + dateobj.getSeconds()).slice(-2)  + ']</span><a href="" class="text-danger">' + user + '</a></strong><span class="col-md-10">' + msg + '</span></div>');
+            var msgobj = $('<div class="row"><strong class="col-md-2"><span class="timestamp">[' + ("0" + dateobj.getHours()).slice(-2) + ":" + ("0" + dateobj.getMinutes()).slice(-2) + ":" + ("0" + dateobj.getSeconds()).slice(-2)  + ']</span><a class="text-danger">' + user + '</a></strong><span class="col-md-10">' + msg + '</span></div>');
             msgobj.appendTo(chatitem);
+            msgobj.smilify();
            
             if (chandiv.hasClass('hidden')) {
                 $('span', chanlistitem).text(parseInt(($('span', chanlistitem).text()) || "0") + 1);
@@ -289,8 +298,8 @@ $(function() {
     });
     
     function updateActiveUserlist() {
-        var users = $('.channel-item:not(.hidden)').data('users'),
-            keys = Object.keys(users),
+        var users = $('.channel-item:not(.hidden)').data('users');
+        var keys = Object.keys(users),
             i, k, len, color;
         
         // Sort keys based on active status, permissions and name
@@ -315,7 +324,7 @@ $(function() {
                 color = 'text-danger';
             else if (users[k].permissions & Permissions.CHANNEL_VOICE)
                 color = 'text-warning';
-            $('#user-list').append('<li role="presentation"><a href="#" class="'+ color +'">' + k + '</a></li>');
+            $('#user-list').append('<li role="presentation"><a class="'+ color +'">' + k + '</a></li>');
         };
     }
     
@@ -351,14 +360,14 @@ $(function() {
                 to = arg;
             }
             else {
-                msg = arg.concat(' ').concat(msg);
+                msg = arg.concat(' ').concat(msg).trim();
             }
             
             console.log('cmd: ' + cmd + '| to: ' + to + '| arg: ' + arg + '| msg: ' + msg);
             
             if (cmd === 'part') {
                 chat.send(JSON.stringify({type: 'part', to: to, message: msg}));
-                // TODO: Remove channel div and button
+                $('#channel-list > button[data-channel="' + to + '"]').remove();
             }
             else if (cmd === 'join' || cmd === 'topic' || cmd === 'mode' || cmd === 'kick'
                     || cmd === 'name' || cmd === 'nick')

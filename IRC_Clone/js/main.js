@@ -6,7 +6,6 @@
     // Register form
     $('#register-form-submit').click(function (event) {
         event.preventDefault();
-
         var inputs = $(this).find("input, select");
         
         inputs.prop('disabled', true);
