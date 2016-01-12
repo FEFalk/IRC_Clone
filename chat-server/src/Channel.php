@@ -104,7 +104,6 @@ class Channel
             if ($u === $user)
                 return $this->users->getInfo();
         }
-        return 0;
     }
     
     /*

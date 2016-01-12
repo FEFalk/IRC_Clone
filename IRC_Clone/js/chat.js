@@ -345,7 +345,7 @@ $(function() {
             var to = activechan,
                 cmd = split[0].substr(1),
                 arg = split.length > 1 ? split[1] : '';
-                msg = split.length > 2 ? split.splice(2).join(' ') : '';
+            msg = split.length > 2 ? split.splice(2).join(' ') : '';
             
             if (arg[0] === '#' || chanHasUser(activechan, arg)) {
                 to = arg;
