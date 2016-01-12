@@ -249,6 +249,20 @@ class Database
     }
     
     /**
+     * Add user to channel
+     * @param User $user User object
+     * @param string $chan channel
+     */
+    public function removeUserFromChannel(User $user, $chan)
+    {
+        $stmt = $this->db->prepare('DELETE FROM `user_channels` WHERE `user` = ? AND `channel` = ?;');
+        $stmt->execute(array($user->getUserId(), $chan));
+        $c = $stmt->rowCount();
+        $stmt->closeCursor();
+        return $c == 1;
+    }
+    
+    /**
      * Log an event to the database
      * @param int $userid User ID (0 for SERVER)
      * @param string $to #Channel or Username

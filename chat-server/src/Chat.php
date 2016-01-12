@@ -382,6 +382,8 @@ class Chat implements MessageComponentInterface
             'message' => null
         ]);
         
+        $this->db->removeUserFromChannel($user->getUser(), $chan->getName());
+        
         // Add event to database
         $this->db->addEvent($client->getUser()->getUserId(), $chan->getName(), 'part', $client->getUser()->getName());
         return true;
@@ -395,7 +397,7 @@ class Chat implements MessageComponentInterface
         else if (!$chan->userHasPermissions($client->getUser(), Permissions::CHANNEL_OPERATOR)
                 && !$client->getUser()->hasPermission(Permissions::SERVER_OPERATOR))
             $error = ErrorCodes::INSUFFICIENT_PERMISSION;
-
+        
         if (isset($error)) {
             $client->send([
                 'type' => 'rtopic',
@@ -502,26 +504,27 @@ class Chat implements MessageComponentInterface
             return false;
         }
         
-        $chan->removeUser($user);
-        
         // Broadcast to channel
         $chan->send([
             'type' => 'kick',
             'from' => $client->getUser()->getName(),
             'date' => time(),
-            'message' => $user->getName()
+            'message' => $user->getUser()->getName()
         ]);
+        
+        $chan->removeUser($user->getUser());
+        $this->db->removeUserFromChannel($user->getUser(), $chan->getName());
         
         // Success string to client, do we need this?
         $client->send([
             'type' => 'rkick',
             'success' => true,
             'to' => $chan->getName(),
-            'message' => $user->getName()
+            'message' => $user->getUser()->getName()
         ]);
         
         // Add event to database
-        $this->db->addEvent($client->getUser()->getUserId(), $chan->getName(), 'kick', $user->getName());
+        $this->db->addEvent($client->getUser()->getUserId(), $chan->getName(), 'kick', $user->getUser()->getName());
         return true;
     }
     
