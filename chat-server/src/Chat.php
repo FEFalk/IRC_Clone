@@ -27,8 +27,8 @@ class Chat implements MessageComponentInterface
             return;
         }
         $this->defaultchan = new Channel($ch['name'], $this);
-        $this->defaultchan>setTopic($ch['topic']);
-        $this->defaultchan>addMode($ch['modes']);
+        $this->defaultchan->setTopic($ch['topic']);
+        $this->defaultchan->addMode($ch['modes']);
         $this->channels->attach($this->defaultchan);
         echo "Created default channel {$this->defaultchan->getName()}\n";
     }

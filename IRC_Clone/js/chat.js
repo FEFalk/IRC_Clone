@@ -225,7 +225,7 @@ $(function() {
             var msg = parseMessage(message);
             var dateobj = new Date(date*1000);
 
-            var msgobj = $('<div class="row"><strong class="col-md-2">[' + ("0" + dateobj.getHours()).slice(-2) + ":" + ("0" + dateobj.getMinutes()).slice(-2) + ":" + + ("0" + dateobj.getSeconds()).slice(-2)  + ']<a href="" class="text-danger">' + user + '</a></strong><span class="col-md-10">' + msg + '</span></div>');
+            var msgobj = $('<div class="row"><strong class="col-md-2"><span class="timestamp">[' + ("0" + dateobj.getHours()).slice(-2) + ":" + ("0" + dateobj.getMinutes()).slice(-2) + ":" + + ("0" + dateobj.getSeconds()).slice(-2)  + ']</span><a href="" class="text-danger">' + user + '</a></strong><span class="col-md-10">' + msg + '</span></div>');
             msgobj.appendTo(chatitem);
            
             if (chandiv.hasClass('hidden')) {
@@ -267,6 +267,12 @@ $(function() {
         
         chat = Chat.login($('#login-username').val(), $('#login-password').val());
     });
+    $('#homeLoginForm').submit(function (event) {
+        event.preventDefault();
+
+        chat = Chat.login($('#homeLogin-username').val(), $('#homeLogin-password').val());
+    });
+    
     
     // Change channel
     $('#channel-list').on('click', 'button', function() {
@@ -389,39 +395,7 @@ $(function() {
         }
     });
     
-    // Register form
-    $('#register-form-submit').click(function(event) {
-        event.preventDefault();
-        
-        var inputs = $(this).find("input, select");
-        inputs.prop('disabled', true);
-        
-        var formdata = $('#register-form').serialize();
-        // TODO: Validate formdata
 
-        $.ajax({
-            method: 'POST',
-            url: 'register.php',
-            dataType: 'json',
-            data: formdata
-        })
-        .done(function(response) {
-            inputs.prop('disabled', false);
-            if (response.success) {
-                console.log(response);
-                $('#registerModal').modal('hide');
-            }
-            else {
-                showAlert('#reg-alert', '#reg-txt-alert', 'Unable to register: ' + response.message);
-            }
-        })
-        .fail(function(msg) {
-            inputs.prop('disabled', false);
-        });
-    });
-    $('#registerModal').on('hidden.bs.modal', function() { 
-        $('#register-form').trigger("reset");
-    });
     
     /**
      * Support functions
@@ -441,9 +415,5 @@ $(function() {
         return d;
     }
     
-    // Show alert (alert-id, alert-text-id, message)
-    function showAlert(id, txtid, msg) {
-        $(id).removeClass('hidden');
-        $(txtid).text(msg);
-    };
+
 });

@@ -1,10 +1,10 @@
 html{
-    /*background: url(../images/home_background.jpg) no-repeat center center fixed; 
+    background: url(../images/home_background.jpg) no-repeat center center fixed; 
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
-    background-size: cover;*/
-    background: #3C3C3E;
+    background-size: cover;
+    /*background: #3C3C3E;*/
 }
 
 body, html {
@@ -15,10 +15,327 @@ body {
     background : none;
 }
 
-#content {
-    background: #689096;
-    border-radius: 8px;
+#titleContainer{
+    display:block;
+    height: 200px;
+    width: 700px;
+    margin-left:auto;
+    margin-right:auto;
+    margin-top: 40px;
+    margin-bottom: 0;
+    background: url(/images/IRC_CLONE_Title.png); 
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+}
+#titleContainer h1{
+    text-align:center;
+    font-family:Open Sans;
+    font-size:60pt;
+    color: white;
+    font-weight: 100;
+}
+#footerContainer{
+    display:block;
+    height: 80px;
+    width: 100%;
+    margin-left:auto;
+    margin-right:auto;
+    margin-top: 200px;
+    margin-bottom: 0;
+    color:white;
+    text-align:center;
+    font-size:9pt;
+    font-family:Open Sans;
+
+    background: rgba(0, 0, 0, 0.92)
+}
+#footerContainer #textDiv{
+    margin:auto;
+    margin-top:15px;
+    width:40%;
+}
+#chat-content {
+    background: rgba(83, 83, 83, 0.89);
     height: 90%;
+    width: 98%;
+    border-radius: 0 !important;
+}
+#chat-content h1{
+    color:white;
+    text-align:center;
+    font-family:Open Sans;
+    font-weight:100;
+}
+#channel-container{
+}
+#chat-frame{
+    background-color: rgb(228, 228, 228);
+}
+
+#chat-content .nav .btn-primary{
+    background-color: transparent !important;
+    background: transparent !important;
+    
+    border-left:none;
+    border-right:none;
+    opacity:0.5;
+    border-color: rgba(111, 111, 111, 1);
+}
+
+#chat-content .nav > .active{
+    background-color: rgba(27, 174, 215, 0.89) !important;
+    opacity:1;
+}
+#chat-content .nav .btn-primary:hover{
+    background-color: rgba(0, 80, 224, 0.4) !important;
+    opacity:1;
+}
+
+
+#channel-list{
+    font-family: Open Sans;
+    font-weight: 300;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top:0;
+
+    border-left:none;
+    border-right:none;
+    border-top:solid;
+    border-bottom:solid;
+    border-radius: 0 !important;
+    border-width:5px;
+    border-bottom-color:rgb(255, 180, 0);
+    border-color: rgba(111, 111, 111, 0.84);
+
+    background:none;
+    border:none;
+    box-shadow:none;
+}
+#channel-list h1{
+    border-bottom:solid;
+    border-width:2px;
+    border-color: rgba(111, 111, 111, 0.84);
+}
+#chat-content{
+    border-top:solid;
+    border-bottom:solid;
+    border-top-width:10px;
+    border-color: rgba(111, 111, 111, 0.84);
+}
+
+.panel-heading{
+    background-color: rgba(0, 0, 0, 0.035);
+    color:red;
+}
+.panel-heading .label{
+    border-width:0.5px !important;
+    border-right:solid;
+        border-color: rgba(111, 111, 111, 0.84);
+        border-radius: 0 !important;
+}
+.panel-heading .label:last-child{
+    border:none;
+}
+.panel-heading .label-primary{
+
+}
+.panel-heading .label-info{
+
+}
+
+#loginContainer{
+    display:block;
+    height: 550px;
+    width: 550px;
+    margin:auto;
+    margin-top: 30px;
+    margin-left:auto;
+    margin-right:auto;
+    background: url(../images/LoginCircle6.png); 
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    text-align:center;
+}
+#loginContainer #title{
+    text-align: center;
+    vertical-align: middle;
+    margin-top:100px;
+    color: white;
+    font-size: 32pt;
+    font-family: Open Sans;
+    font-weight: 300;
+}
+#loginContainer #regErrorMsg{
+    text-align: center;
+    vertical-align: middle;
+    margin:0;
+    color: white;
+    font-size: 32pt;
+    font-family: Open Sans;
+    font-weight: 300;
+}
+#loginContainer #homeLoginForm, #loginContainer #register-form{
+    margin:auto;
+    margin-top: 55px;
+    width: 60%;
+}
+
+#loginContainer .form-group p{
+    color: white;
+    font-family: Open Sans;
+    font-size: 12pt;
+}
+
+#loginContainer p{
+    color: white;
+    font-family: Open Sans;
+    font-size: 12pt;
+}
+
+#loginContainer .btn-success{
+    color: white;
+    font-family: Open Sans;
+    font-size: 17pt;
+    width:90%;
+    background: -moz-linear-gradient(top,  rgba(156, 255, 153, 0.7) 50%, rgba(129, 255, 125, 0.7) 10%); /* FF3.6+ */
+}
+
+#loginContainer .form-control{
+    outline:none;
+    border-left:none;
+    border-right:none;
+    border-top:none;
+    border-radius: 0 !important;
+    box-shadow:none !important;
+    font-family: Open Sans;
+    font-size:18pt;
+    color: white;
+    font-weight: 300;
+    padding-left:40px;
+    padding-top: 0;
+    padding-bottom: 0;
+    height:100%;
+}
+#loginContainer .form-control::-webkit-input-placeholder{ /* WebKit, Blink, Edge */
+    color:white;
+    opacity:  0.9;
+}
+#loginContainer .form-control:-moz-placeholder{ /* Mozilla Firefox 4 to 18 */
+   color:white;
+   opacity:  0.9;
+}
+#loginContainer .form-control::-moz-placeholder{ /* Mozilla Firefox 19+ */
+   color:white;
+   opacity:  0.9;
+}
+#loginContainer .form-control:-ms-input-placeholder{ /* Internet Explorer 10-11 */
+   color:white;
+   opacity:  0.9;
+}
+#loginContainer .form-control:placeholder-shown{ /* Standard (https://drafts.csswg.org/selectors-4/#placeholder) */
+  color:white;
+  opacity:  0.9;
+}
+#loginContainer .form-control:focus::-webkit-input-placeholder{ /* WebKit, Blink, Edge */
+    color:white;
+    opacity:  0;
+}
+#loginContainer .form-control:focus:-moz-placeholder{ /* Mozilla Firefox 4 to 18 */
+   color:white;
+   opacity:  0;
+}
+#loginContainer .form-control:focus::-moz-placeholder{ /* Mozilla Firefox 19+ */
+   color:white;
+   opacity:  0;
+}
+#loginContainer .form-control:focus:-ms-input-placeholder{ /* Internet Explorer 10-11 */
+   color:white;
+   opacity:  0;
+}
+#loginContainer .form-control:focus:placeholder-shown{ /* Standard (https://drafts.csswg.org/selectors-4/#placeholder) */
+  color:white;
+  opacity:  0;
+}
+
+#loginContainer #homeLogin-username{
+    background: url(../images/glyphicons/png/userIcon2.png) no-repeat scroll 7px 5px rgba(0, 0, 0, .2);
+    background-size: 22px 23px;
+
+}
+#loginContainer #homeLogin-password{
+    background: url(../images/glyphicons/png/passwordIcon2.png) no-repeat scroll 5px 7px rgba(0, 0, 0, .2);
+    background-size: 26px 22px;
+}
+#loginContainer #register-email{
+    background: url(../images/glyphicons/png/emailIcon2.png) no-repeat scroll 7px 7px rgba(0, 0, 0, .2);
+    background-size: 22px 22px;
+}
+#loginContainer .form-control:focus{
+    color: white;
+}
+#loginContainer #register-form-submit{
+    margin-bottom:10px;
+    color: white;
+    font-family: Open Sans;
+    font-size: 17pt;
+    width:90%;
+    background: -moz-linear-gradient(top,  #80adff 50%, #6c9fff 10%); /* FF3.6+ */
+    height: 45px;
+}
+#loginContainer #register-form-cancel{
+    margin-bottom:10px;
+    color: white;
+    font-family: Open Sans;
+    font-size: 17pt;
+    width:90%;
+    background: -moz-linear-gradient(top,  #ee6c70 50%, #eb5458 10%); /* FF3.6+ */
+    height: 45px;
+}
+
+#registerContainer{
+    height: 100px;
+    width: 400px;
+    margin:auto;
+    margin-top: 10px;
+    text-align:center;
+}
+
+#registerContainer p{
+    color: white;
+    font-family: Open Sans;
+    font-size: 10pt;
+    text-align:center;
+    margin-bottom: 0;
+}
+
+#registerContainer .btn{
+    outline:none;
+    border-left:none;
+    border-right:none;
+    border-top:none;
+    border-bottom:solid;
+    border-radius: 0 !important;
+    box-shadow:none !important;
+    background: rgba(0, 0, 0, 0);
+    font-family: Open Sans;
+    font-size:18pt;
+    color: #ff9835;
+    font-weight: 300;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top:0;
+    border-width:0.5px;
+    border-bottom-color:rgb(255, 180, 0);
+}
+
+#registerContainer .btn:hover{
+    color:white;
+    border-bottom-color:white;
 }
 
 #chat-input {
@@ -47,12 +364,132 @@ body {
 #chat-frame strong, #user-list li {
     padding: 0 !important;
     margin: 0 !important;
-}
 
+}
+#user-list .active a, #user-list .active a:hover{
+}
+#user-list, #user-list:hover{
+    outline:none;
+    border-left:none;
+    border-right:none;
+    border-top:solid;
+    border-bottom:none;
+    border-radius: 0 !important;
+    box-shadow:none !important;
+    font-family: Open Sans;
+    font-weight: 300;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top:0;
+    border-width:2px;
+    border-bottom-color:rgb(255, 180, 0);
+
+    background-color: transparent !important;
+    background: transparent !important;
+    border-color: rgba(111, 111, 111, 0.84);
+}
+#user-list > li > a{
+    border-width:0.5px !important;
+    border-bottom:solid;
+    font-size:11pt;
+    color: rgb(255, 255, 255);
+    border-color: rgba(111, 111, 111, 0.84);
+}
+#user-list > li > a:hover{
+    background-color: rgba(0, 80, 224, 0.31);
+}
+#channel-container{
+    padding-bottom: 50px;
+}
 #channel-container .row {
+    font-family: Open Sans;
     border-bottom: 1px solid #ccc;
+    font-size:11pt;
+    position: relative;
+    padding: 0px;
+    margin: 2px 0px;
+}
+#channel-container a{
+    margin-left:10px;
+
+}
+#channel-container .timestamp{
+    opacity:0.3;
+}
+#channel-container .col-md-10 {
+    position: relative;
+    padding: 1px 5px;
+    background: #FFFFFF;
+    -webkit-border-radius: 2px;
+    -moz-border-radius: 2px;
+    border-radius: 2px;
+    border: #DFE1E2 solid 1px;
+    width:auto;
+
 }
 
+#channel-container .col-md-10:after {
+content: '';
+position: absolute;
+border-style: solid;
+border-width: 5px 7px 5px 0;
+border-color: transparent #FFFFFF;
+display: block;
+width: 0;
+z-index: 1;
+left: -7px;
+top: 4px;
+}
+#channel-container .col-md-10:before
+{
+content: '';
+position: absolute;
+border-style: solid;
+border-width: 5px 7px 5px 0;
+border-color: transparent #DFE1E2;
+display: block;
+width: 0;
+z-index: 0;
+left: -8px;
+top: 4px;
+}
+
+#chat-content .input-group
+{
+    border:none;
+    background-color:rgba(0, 0, 0, 0.40);
+}
+
+#chat-content .input-group textarea
+{
+    padding-left:40px;
+    background: url(../images/glyphicons/png/emailIcon2.png) no-repeat scroll 7px 2px rgba(0, 0, 0, .2);
+    background-size: 22px 22px;
+    color:white;
+    border:none;
+    background-color:rgb(82, 82, 82);
+    
+}
+
+#chat-content .input-group textarea.form-control
+{
+    height:100%;
+    
+}
+
+#chat-content .input-group #basic-addon2
+{
+    background-color:rgb(0, 154, 69);
+    border:none;
+    color:white;
+    font-family:Open Sans;
+    font-size:16pt;
+    font-weight:500;
+}
+
+#chat-content .panel-footer {
+    margin-top:10px;
+}
 #chat-frame {
     height: 90%;
 }
