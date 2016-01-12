@@ -14,6 +14,8 @@ $(function() {
     // Chat functionality
     var Chat = {
         login: function(username, password) {
+            if (chat)
+                chat.close();
             var conn = new WebSocket('ws://' + window.location.hostname + ':8080');
 
             conn.onopen = function(e) {
@@ -221,6 +223,7 @@ $(function() {
         },
         
         addMessage: function(chan, user, message, date) {
+            if (!chan) return;
             date = typeof date !== 'undefined' ? date : Date.now() / 1000 | 0;
             if (!$('#channel-list > button[data-channel="' + chan + '"]').length)
                 Chat.addChannel(chan);

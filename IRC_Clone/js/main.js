@@ -101,6 +101,7 @@
     });
 
     $('#btnLogout').on('click', function () {
+        chat.close();
         $("#mainNavbar").hide();
         $("#chat-content").hide();
         $("#titleContainer").show(500);
