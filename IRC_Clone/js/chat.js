@@ -1,5 +1,5 @@
 $(function() {
-    var chat;
+    window.chat = null;
     var chatuser = '';
     
     // Constants
