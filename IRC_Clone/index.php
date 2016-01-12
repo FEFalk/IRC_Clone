@@ -7,6 +7,7 @@
     <script type="text/javascript" src="js/autoresize.js"></script>
     <script type="text/javascript" src="js/chat.js"></script>
     <script type="text/javascript" src="js/main.js"></script>
+	<script type="text/javascript" src="js/login.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700,800'>
@@ -36,10 +37,18 @@
                         <input id="login-password" type="password" placeholder="Password" class="form-control">
                     </div>
                     <div class="form-group hidden"></div>
-                    <button type="submit" class="btn btn-success">Sign in</button>
+                    <button id="btnSignIn" type="submit" class="btn btn-success" >Sign in</button>
                     <button id="btnRegister" type="button" class="btn" data-toggle="modal" data-target="#registerModal">Register</button>
                 </form>
+				<form id="loggedIn-form" class="navbar-form navbar-right">
+					<div class="form-group">
+						<p class="text-info" id="loggedInText">Logged in as: <span class="text-warning" id='loggedInName'></span></p>
+					</div>
+					<div class="form-group hidden"></div>
+					<button id="btnLogout" type="submit" class="btn btn-success">Logout</button>
+				</form>
             </div>
+        </div>
         </div>
     </nav>
     
@@ -86,6 +95,16 @@
 
 
 
+
+    <div id="searchDiv">
+	    <div class="alert alert-danger alert-dismissible hidden" id="search-alert" role="alert"><button type="button" class="close alertclose" aria-label="Close"><span aria-hidden="true">&times;</span></button><span id="search-txt-alert"></span></div>
+		<form id="search-form" class="form-horizontal">		
+			<input class="form-control" type="text" name="searchWord" id="searchWord" placeholder="Search: ">
+			<button type="button" class="btn btn-primary" id="search-form-submit">Submit</button>	
+		</form>
+	</div>
+
+
     <!-- Chat Content -->
     <div class="top-buffer container-fluid row-fluid row-no-padding" id="chat-content">
         <div class="alert alert-danger alert-dismissible hidden" id="alert" role="alert"><button type="button" class="close alertclose" aria-label="Close"><span aria-hidden="true">&times;</span></button><span id="txtAlert">Wow big alert warning warning hello</span></div>
@@ -105,12 +124,12 @@
         <ul class="col-md-2 panel nav nav-pulls nav-stacked" role="tablist" id="user-list">
         </ul>
     </div>
-
+    
     
 
 
     <!-- Registration -->
-        <div class="modal fade" id="registerModal" tabindex="-1" role="dialog" aria-labelledby="registerModalLabel" aria-hidden="true">
+    <div class="modal fade" id="registerModal" tabindex="-1" role="dialog" aria-labelledby="registerModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-sm" role="document">
             <div class="modal-content">
                 <div class="modal-header">
