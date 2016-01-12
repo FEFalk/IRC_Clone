@@ -23,8 +23,11 @@ bld/
 
 # Visual Studo 2015 cache/options directory
 .vs/
+
+# Visual Studio Code
 .vscode/
 typings/
+Workspace
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
@@ -198,6 +201,13 @@ FakesAssemblies/
 *.sln
 /IRC_Clone/IRC_Clone.phpproj
 /chat-server/chatserver.phpproj
+
+# Composer
+composer
+vendor/
+composer.bat
+composer.lock
+composer.phar
 /IRC_Clone/images
 /chat-server
 *.mwb
