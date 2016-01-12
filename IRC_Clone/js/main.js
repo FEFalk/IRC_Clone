@@ -94,13 +94,6 @@
 
 
     });
-    $('#btnLogin').on('click', function () {
-        $("#mainNavbar").show();
-        $("#chat-content").show();
-        $("#titleContainer").hide(500);
-        $("#loginContainer").hide(500);
-        $("#registerContainer").hide(500);
-    });
 
     $('#btnLogout').on('click', function () {
         $("#mainNavbar").hide();

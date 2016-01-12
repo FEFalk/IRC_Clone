@@ -7,7 +7,6 @@
     <script type="text/javascript" src="js/autoresize.js"></script>
     <script type="text/javascript" src="js/chat.js"></script>
     <script type="text/javascript" src="js/main.js"></script>
-	<script type="text/javascript" src="js/login.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700,800'>
@@ -21,10 +20,11 @@
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
                 </button>
-                <a class="navbar-brand" href="#">Project #IRC</a>
+                <a class="navbar-brand" id="navHome" href="#">Project #IRC</a>
             </div>
             <div id="navbar" class="collapse navbar-collapse">
                 <ul class="nav navbar-nav">
+                    <li><image src="../images/chat_logo4_white.png" id="logoImage"></li>
                     <li><a href="#about">About</a></li>
                     <li><a href="#contact">Contact</a></li>
                 </ul>

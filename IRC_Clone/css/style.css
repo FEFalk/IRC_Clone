@@ -23,7 +23,7 @@ body {
     margin-right:auto;
     margin-top: 40px;
     margin-bottom: 0;
-    background: url(/images/IRC_CLONE_Title.png); 
+    background: url(../images/IRC_CLONE_Title.png); 
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
@@ -55,6 +55,19 @@ body {
     margin:auto;
     margin-top:15px;
     width:40%;
+}
+
+#logoImage{
+    width:50px;
+    height:100%;
+    margin:0;
+    margin-top:8px;
+    
+}
+#navHome{
+    margin:0;
+    padding:0;
+    line-height: 51px;
 }
 
 #loggedIn-form{

@@ -119,6 +119,12 @@ $(function() {
                 //Logged in
                 $('#loggedInName').html($('#homeLogin-username:text').val());
 
+                $("#mainNavbar").show();
+                $("#chat-content").show();
+                $("#titleContainer").hide(500);
+                $("#loginContainer").hide(500);
+                $("#registerContainer").hide(500);
+
                 chatuser = data.message.name;
                 $.each(data.message.channels, function(key, val) {
                     Chat.addChannel(key);
