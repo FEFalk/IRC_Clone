@@ -101,11 +101,11 @@
     });
 
     $('#btnLogout').on('click', function () {
-        $("#mainNavbar").hide();
-        $("#chat-content").hide();
-        $("#titleContainer").show(500);
-        $("#loginContainer").show(500);
-        $("#registerContainer").show(500);
+        $("#mainNavbar").slideUp(400);
+        $("#chat-content").slideUp(400);
+        $("#loginContainer").delay(400).slideDown(700);
+        $("#registerContainer").delay(400).slideDown(700);
+        $("#titleContainer").delay(800).slideDown(700);
     });
 
     // Show alert (alert-id, alert-text-id, message)

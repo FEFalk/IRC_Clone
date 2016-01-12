@@ -123,11 +123,12 @@ $(function() {
                 //Logged in
                 $('#loggedInName').html($('#homeLogin-username:text').val());
 
-                $("#mainNavbar").show();
-                $("#chat-content").show();
-                $("#titleContainer").hide(500);
-                $("#loginContainer").hide(500);
-                $("#registerContainer").hide(500);
+                $("#titleContainer").slideUp(400);
+                $("#loginContainer").slideUp(400);
+                $("#registerContainer").slideUp(400);
+                $("#mainNavbar").delay(400).slideDown(700);
+                $("#chat-content").delay(400).slideDown(700);
+
 
                 chatuser = data.message.name;
                 $.each(data.message.channels, function(key, val) {
