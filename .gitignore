@@ -198,3 +198,10 @@ FakesAssemblies/
 *.sln
 /IRC_Clone/IRC_Clone.phpproj
 /chat-server/chatserver.phpproj
+
+# Composer
+chat-server/composer
+chat-server/vendor/
+chat-server/composer.bat
+chat-server/composer.lock
+chat-server/composer.phar
