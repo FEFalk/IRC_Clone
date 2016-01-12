@@ -198,3 +198,6 @@ FakesAssemblies/
 *.sln
 /IRC_Clone/IRC_Clone.phpproj
 /chat-server/chatserver.phpproj
+/IRC_Clone/images
+/chat-server
+*.mwb
