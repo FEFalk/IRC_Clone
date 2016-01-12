@@ -35,37 +35,38 @@
         });
     });
 
-    $('#search-form-submit').click(function (event) {
+    $('#searchWord').keypress(function (event) {
 
-        event.preventDefault();
+        if (event.which == 13) {
+            event.preventDefault();
 
-        var inputs = $(this).find("input, select");
-        inputs.prop('disabled', true);
+            var inputs = $(this).find("input, select");
+            inputs.prop('disabled', true);
 
-        var formdata = $('#search-form').serialize();
-        console.log(formdata);
-        // TODO: Validate formdata
+            var formdata = $('#search-form').serialize();
+            console.log(formdata);
+            // TODO: Validate formdata
 
-        $.ajax({
-            method: 'POST',
-            url: 'search.php',
-            dataType: 'json',
-            data: formdata
-        })
-		.done(function (response) {
-		    inputs.prop('disabled', false);
-		    if (response.success) {
-		        console.log(response.message.name);
-		    }
-		    else {
-		        showAlert('#search-alert', '#search-txt-alert', 'Unable to register: ' + response.message);
-		    }
+            $.ajax({
+                method: 'POST',
+                url: 'search.php',
+                dataType: 'json',
+                data: formdata
+            })
+		    .done(function (response) {
+		        inputs.prop('disabled', false);
+		        if (response.success) {
+		            console.log(response.message.name);
+		        }
+		        else {
+		            showAlert('#search-alert', '#search-txt-alert', 'Error: ' + response.message);
+		        }
 
-		})
-        .fail(function (msg) {
-            inputs.prop('disabled', false);
-        });
-
+		    })
+            .fail(function (msg) {
+                inputs.prop('disabled', false);
+            });
+        }
     });
 
 
@@ -99,6 +100,14 @@
         $("#titleContainer").hide(500);
         $("#loginContainer").hide(500);
         $("#registerContainer").hide(500);
+    });
+
+    $('#btnLogout').on('click', function () {
+        $("#mainNavbar").hide();
+        $("#chat-content").hide();
+        $("#titleContainer").show(500);
+        $("#loginContainer").show(500);
+        $("#registerContainer").show(500);
     });
 
     // Show alert (alert-id, alert-text-id, message)

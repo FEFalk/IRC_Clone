@@ -113,9 +113,12 @@ $(function() {
             else if (data.type === "rlogin") {
                 if (data.success === false) {
                     showAlert('alert', 'txtAlert', 'Login error: ' + data.message);
+
                     return;
                 }
-                
+                //Logged in
+                $('#loggedInName').html($('#homeLogin-username:text').val());
+
                 chatuser = data.message.name;
                 $.each(data.message.channels, function(key, val) {
                     Chat.addChannel(key);
