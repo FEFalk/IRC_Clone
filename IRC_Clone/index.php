@@ -14,7 +14,7 @@
     <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700,800'>
 </head>
 <body>
-
+    <div class="alert alert-danger alert-dismissible hidden" id="alert" role="alert"><button type="button" class="close alertclose" aria-label="Close"><span aria-hidden="true">&times;</span></button><span id="txtAlert">Wow big alert warning warning hello</span></div>
 
     <!-- Navigation-Bar -->
     <nav class="navbar navbar-inverse navbar-static-top" id="mainNavbar">
@@ -26,7 +26,7 @@
             </div>
             <div id="navbar" class="collapse navbar-collapse">
                 <ul class="nav navbar-nav">
-                    <li><image src="../images/chat_logo4_white.png" id="logoImage"></li>
+                    <li><image src="images/chat_logo4_white.png" id="logoImage"></li>
                     <li><a href="#about">About</a></li>
                     <li><a href="#contact">Contact</a></li>
                 </ul>
@@ -83,14 +83,8 @@
         <button id="btnNotRegistered" type="button" class="btn">Create Account</button>
     </div>
 
-
-
-
-
     <!-- Chat Content -->
     <div class="top-buffer container-fluid row-fluid row-no-padding" id="chat-content">
-        <div class="alert alert-danger alert-dismissible hidden" id="alert" role="alert"><button type="button" class="close alertclose" aria-label="Close"><span aria-hidden="true">&times;</span></button><span id="txtAlert">Wow big alert warning warning hello</span></div>
-        
         <div class="col-md-2 panel btn-group-vertical nav" role="group" aria-label="channels" id="channel-list">
             <div id="searchDiv">
 	            <div class="alert alert-danger alert-dismissible hidden" id="search-alert" role="alert"><button type="button" class="close alertclose" aria-label="Close"><span aria-hidden="true">&times;</span></button><span id="search-txt-alert"></span></div>
