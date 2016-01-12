@@ -44,9 +44,6 @@ $(function() {
             if (data.type === 'message') {
                 Chat.addMessage(data.to, data.from, data.message, data.date);
             }
-            else if (data.type === 'topic') {
-                Chat.setChannelTopic(data.to, data.message);
-            }
             else if (data.type === 'online') {
                 if (data.from === chatuser) return;
                 $('.channel-item[data-channel="' + data.to + '"]').data('users')[data.from].active = true;
@@ -117,26 +114,25 @@ $(function() {
             else if (data.type === "rlogin") {
                 if (data.success === false) {
                     showAlert('alert', 'txtAlert', 'Login error: ' + data.message);
-
                     return;
                 }
-                //Logged in
-                $('#loggedInName').html($('#homeLogin-username:text').val());
+                chatuser = data.message.name;
+                
+                $('#loggedInName').html(chatuser);
 
                 $("#mainNavbar").show();
                 $("#chat-content").show();
                 $("#titleContainer").hide(500);
                 $("#loginContainer").hide(500);
                 $("#registerContainer").hide(500);
-
-                chatuser = data.message.name;
+                
                 $.each(data.message.channels, function(key, val) {
                     Chat.addChannel(key);
                     Chat.setChannelTopic(key, val.topic);
                     Chat.setChannelModes(key, val.modes);
                     Chat.setUserList(key, val.users);
                 });
-                $('#channel-list button').first().click();
+                $('#channel-list > button').first().click();
             }
             else if (data.type === "rjoin") {
                 if (data.success === false) {
@@ -148,7 +144,7 @@ $(function() {
                 Chat.setChannelTopic(data.message.name, data.message.topic);
                 Chat.setChannelModes(data.message.name, data.message.modes);
                 Chat.setUserList(data.message.name, data.message.users);
-                $('#channel-list button[data-channel="' + data.message.name + '"]').click();
+                $('#channel-list > button[data-channel="' + data.message.name + '"]').click();
             }
             else if (data.type === 'rname') {
                 if (data.success === false) {
@@ -218,7 +214,7 @@ $(function() {
             if (name === chatuser) {
                 $('#channel-list > button[data-channel="' + chan + '"]').remove();
                 if (!$('.channel-item:not(.hidden)').length)
-                    $('#channel-list button').first().click();
+                    $('#channel-list > button').first().click();
                 return;
             }
             delete $('.channel-item[data-channel="' + chan + '"]').data('users')[name];
@@ -300,7 +296,7 @@ $(function() {
         $('.channel-item[data-channel="' + channel + '"').removeClass('hidden');
         updateActiveUserlist();
         $('#channel-list > button[data-channel="'+ channel +'"] span').text("");
-        $('#channel-list button[data-channel="' + channel + '"]').addClass('active').siblings().removeClass('active');
+        $('#channel-list > button[data-channel="' + channel + '"]').addClass('active').siblings().removeClass('active');
     });
     
     function updateActiveUserlist() {
@@ -376,7 +372,7 @@ $(function() {
                 $('#channel-list > button[data-channel="' + to + '"]').remove();
             }
             else if (cmd === 'join' || cmd === 'topic' || cmd === 'mode' || cmd === 'kick'
-                    || cmd === 'name' || cmd === 'nick')
+                    || cmd === 'name')
             {
                 chat.send(JSON.stringify({type: cmd, to: to, message: msg}));
             }

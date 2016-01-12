@@ -26,7 +26,7 @@
             </div>
             <div id="navbar" class="collapse navbar-collapse">
                 <ul class="nav navbar-nav">
-                    <li><image src="../images/chat_logo4_white.png" id="logoImage"></li>
+                    <li><image src="images/chat_logo4_white.png" id="logoImage"></li>
                     <li><a href="#about">About</a></li>
                     <li><a href="#contact">Contact</a></li>
                 </ul>
