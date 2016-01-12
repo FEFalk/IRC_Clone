@@ -23,7 +23,13 @@
             inputs.prop('disabled', false);
             if (response.success) {
                 console.log(response);
+                
                 $('#registerModal').modal('hide');
+                $('#btnNotRegistered').toggle();
+                $('#notRegText').toggle();
+                $('#title').html('User Login')
+                $('#homeLoginForm').slideToggle(200);
+                $('#register-form').slideToggle(200);
             }
             else {
                 showAlert('#reg-alert', '#reg-txt-alert', 'Unable to register: ' + response.message);
