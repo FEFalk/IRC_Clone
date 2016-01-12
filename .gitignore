@@ -23,8 +23,11 @@ bld/
 
 # Visual Studo 2015 cache/options directory
 .vs/
+
+# Visual Studio Code
 .vscode/
 typings/
+Workspace
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
@@ -200,8 +203,8 @@ FakesAssemblies/
 /chat-server/chatserver.phpproj
 
 # Composer
-chat-server/composer
-chat-server/vendor/
-chat-server/composer.bat
-chat-server/composer.lock
-chat-server/composer.phar
+composer
+vendor/
+composer.bat
+composer.lock
+composer.phar
