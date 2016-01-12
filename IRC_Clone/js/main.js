@@ -32,7 +32,7 @@
                 $('#register-form').slideToggle(200);
             }
             else {
-                showAlert('#reg-alert', '#reg-txt-alert', 'Unable to register: ' + response.message);
+                showAlert('#alert', '#txtAlert', 'Unable to register: ' + response.message);
             }
         })
         .fail(function (msg) {
