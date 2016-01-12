@@ -208,6 +208,5 @@ vendor/
 composer.bat
 composer.lock
 composer.phar
-/IRC_Clone/images
 /chat-server
 *.mwb

@@ -30,7 +30,7 @@
                 </ul>
 				<form id="loggedIn-form" class="navbar-form navbar-right">
 					<div class="form-group">
-						<p class="text-info" id="loggedInText">Logged in as: <span class="text-warning" id='loggedInName'></span></p>
+						<p><span id="loggedInText">Logged in as: </span><span class="text-warning" id='loggedInName'></span></p>
 					</div>
 					<div class="form-group hidden"></div>
 					<button id="btnLogout" type="submit" class="btn btn-success">Logout</button>

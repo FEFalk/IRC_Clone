@@ -56,6 +56,45 @@ body {
     margin-top:15px;
     width:40%;
 }
+
+#loggedIn-form{
+    font-family: Open Sans;
+    font-size:14pt;
+    width:40%;
+    padding:0;
+    margin:0;
+    padding-top:7px;
+    text-align:right;
+}
+
+#loggedIn-form #loggedInText{
+    color:rgba(0, 138, 255, 0.6);
+      height: 40px;
+  line-height: 40px;
+  white-space: nowrap;
+}
+
+#loggedIn-form #loggedInName{
+    font-weight:600 !important;
+    color:rgba(255, 164, 0, 0.8);
+      height: 40px;
+  line-height: 40px;
+  white-space: nowrap;
+}
+
+#loggedIn-form p{
+  white-space: nowrap;
+  margin: 0;
+  padding: 0;
+}
+
+#btnLogout{
+    background: -moz-linear-gradient(top,  #ee6c70 50%, #eb5458 10%); /* FF3.6+ */
+    color: white;
+    font-family: Open Sans;
+    width:80px;
+    border-color:transparent;
+}
 #chat-content {
     background: rgba(83, 83, 83, 0.89);
     height: 90%;
