@@ -119,14 +119,12 @@ $(function() {
                     return;
                 }
                 chatuser = data.message.name;
-                
                 $('#loggedInName').html(chatuser);
-
-                $("#mainNavbar").show();
-                $("#chat-content").show();
-                $("#titleContainer").hide(500);
-                $("#loginContainer").hide(500);
-                $("#registerContainer").hide(500);
+                $("#titleContainer").slideUp(400);
+                $("#loginContainer").slideUp(400);
+                $("#registerContainer").slideUp(400);
+                $("#mainNavbar").delay(400).slideDown(700);
+                $("#chat-content").delay(400).slideDown(700);
                 
                 $.each(data.message.channels, function(key, val) {
                     Chat.addChannel(key);
