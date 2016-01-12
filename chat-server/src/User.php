@@ -43,7 +43,7 @@ class User
     {
         $msg['from'] = $this->name;
         foreach($this->channels as $obj) {
-            $obj->chan->send($msg);
+            $obj->send($msg);
         }
     }
     
@@ -55,39 +55,33 @@ class User
     public function joinChannel(Channel $chan, $permissions)
     {
         $chan->addUser($this, $permissions);
-        $this->channels->attach((object) array('chan' => $chan, 'permissions' => $permissions));
+        $this->channels->attach($chan, $permissions);
     }
     
     public function leaveChannel(Channel $chan)
     {
-        foreach($this->channels as $ch) {
-            if ($ch->chan === $chan) {
-                $this->channels->detach($ch);
-                return;
-            }
-        }
+        $this->channels->detach($chan);
     }
     
     public function inChannel(Channel $chan)
     {
-        foreach($this->channels as $ch) {
-            if ($ch->chan === $chan)
-                return true;
-        }
-        return false;
+        return $this->channels->contains($chan);
     }
     
     public function getChannels($name_only = false)
     {
         $chans = array();
-        foreach($this->channels as $ch) {
-            $chans[$ch->chan->getName()] = array(
-                'permissions' => $ch->permissions,
-                'modes' => $ch->chan->getModes(),
-                'topic' => $ch->chan->getTopic());
+        $this->channels->rewind();
+        while ($this->channels->valid()) {
+            $chan = $this->channels->current();
+            $chans[$chan->getName()] = array(
+                'permissions' => $this->channels->getInfo(),
+                'modes' => $chan->getModes(),
+                'topic' => $chan->getTopic());
                 
             if (!$name_only)
-                $chans[$ch->chan->getName()]['chan'] = $ch->chan;
+                $chans[$chan->getName()]['chan'] = $chan;
+            $this->channels->next();
         }
         return $chans;
     }

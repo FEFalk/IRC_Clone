@@ -33,7 +33,7 @@ class Channel
         $msg['to'] = $this->name;
         foreach($this->users as $user)
         {
-            $user->user->send($msg);
+            $user->send($msg);
         }
     }
     
@@ -43,6 +43,7 @@ class Channel
      */
     public function getUserCount()
     {
+        // TODO: Add offline users!
         return $this->users->count();
     }
     
@@ -54,10 +55,10 @@ class Channel
      */
     public function userHasPermissions(User $user, $permissions)
     {
-        foreach($this->users as $u)
-        {
-            if ($u->user === $user)
-                return $u->permissions & $permissions;
+        $this->users->rewind();
+        while ($this->users->valid()) {
+            if ($this->users->current() === $user)
+                return $this->users->getInfo() & $permissions;
         }
         return false;
     }
@@ -69,7 +70,7 @@ class Channel
      */
     public function addUser(User $user, $permissions)
     {
-        $this->users->attach((object) array('user' => $user, 'permissions' => $permissions));
+        $this->users->attach($user, $permissions);
     }
     
     /*
@@ -78,13 +79,7 @@ class Channel
      */
     public function removeUser(User $user)
     {
-        foreach($this->users as $u) {
-            if ($u->user === $user) {
-                $this->users->detach($u);
-                return true;
-            }
-        }
-        return false;
+        $this->users->detach($user);
     }
     
     /*
@@ -94,12 +89,8 @@ class Channel
      */
     public function setUserPermissions(User $user, $permissions)
     {
-        foreach($this->users as $u) {
-            if ($u->user === $user) {
-                $u->permissions = $permissions;
-                return;
-            }
-        }
+        if ($this->users->contains($user))
+            $this->users[$user] = $permissions;
     }
     
     /*
@@ -110,10 +101,9 @@ class Channel
     public function getUserPermissions(User $user)
     {
         foreach($this->users as $u) {
-            if ($u->user === $user)
-                return $u->permissions;
+            if ($u === $user)
+                return $this->users->getInfo();
         }
-        return 0;
     }
     
     /*
@@ -123,11 +113,7 @@ class Channel
      */
     public function hasUser(User $user)
     {
-        foreach($this->users as $u) {
-            if ($u->user === $user)
-                return true;
-        }
-        return false;
+        return $this->users->contains($user);
     }
     
     /**
@@ -137,8 +123,10 @@ class Channel
     public function getUsers()
     {
         $users = array();
-        foreach($this->users as $u) {
-            $users[$u->user->getName()] = $u->permissions;
+        $this->users->rewind();
+        while ($this->users->valid()) {
+            $users[$this->users->current()->getName()] = $this->users->getInfo();
+            $this->users->next();
         }
         return $users;
     }

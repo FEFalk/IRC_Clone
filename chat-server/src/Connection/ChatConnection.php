@@ -39,11 +39,8 @@ class ChatConnection implements ChatConnectionInterface
         $userinfo = $this->chat->db->getUserInfo($username);
         
         // Username does not exist or password is incorrect
-        if (!$userinfo || !password_verify($password, $userinfo['password'])){
-            console.log("hej");
+        if (!$userinfo || !password_verify($password, $userinfo['password']))
             return null;
-            }
-
         
         // Get user channels
         $chans = $this->chat->db->getUserChannels($userinfo['id']);
