@@ -41,7 +41,7 @@ ENGINE = InnoDB;
 CREATE  TABLE IF NOT EXISTS `ircclone`.`channels` (
   `name` VARCHAR(16) NOT NULL ,
   `modes` INT UNSIGNED NOT NULL DEFAULT 0 ,
-  `topic` VARCHAR(45) NULL ,
+  `topic` VARCHAR(128) NULL ,
   `password` VARCHAR(12) NULL ,
   `userlimit` INT UNSIGNED NOT NULL DEFAULT 0 ,
   PRIMARY KEY (`name`) )

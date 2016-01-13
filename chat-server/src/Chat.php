@@ -193,7 +193,9 @@ class Chat implements MessageComponentInterface
     {
         if (!$obj->to)
             return;
-        $message = htmlspecialchars($obj->message);
+        $message = trim(htmlspecialchars($obj->message));
+        if (strlen($message) == 0)
+            return false;
         
         // Sent to a channel
         if ($obj->to[0] == '#') {
@@ -398,6 +400,10 @@ class Chat implements MessageComponentInterface
                 && !$client->getUser()->hasPermission(Permissions::SERVER_OPERATOR))
             $error = ErrorCodes::INSUFFICIENT_PERMISSION;
         
+        $message = trim(htmlspecialchars($obj->message));
+        if (strlen($message) === 0 || strlen($message) > 128)
+            $error = ErrorCodes::BAD_FORMAT;
+        
         if (isset($error)) {
             $client->send([
                 'type' => 'rtopic',
@@ -407,7 +413,6 @@ class Chat implements MessageComponentInterface
             return false;
         }
         
-        $message = htmlspecialchars($obj->message);
         $chan->setTopic($message);
         
         // Broadcast to channel
