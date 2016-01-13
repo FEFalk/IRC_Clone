@@ -193,7 +193,9 @@ class Chat implements MessageComponentInterface
     {
         if (!$obj->to)
             return;
-        $message = htmlspecialchars($obj->message);
+        $message = trim(htmlspecialchars($obj->message));
+        if (strlen($message) == 0)
+            return false;
         
         // Sent to a channel
         if ($obj->to[0] == '#') {
