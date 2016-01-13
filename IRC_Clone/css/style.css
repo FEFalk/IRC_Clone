@@ -102,11 +102,33 @@ body {
 }
 
 #btnLogout{
-    background: -moz-linear-gradient(top,  #ee6c70 50%, #eb5458 10%); /* FF3.6+ */
-    color: white;
+    font-weight:100;
+    color: rgba(255, 255, 255, 0.84);
     font-family: Open Sans;
-    width:80px;
-    border-color:transparent;
+    font-size: 14pt;
+    width:130px;
+border-radius: 4px 4px 4px 4px;
+-moz-border-radius: 4px 4px 4px 4px;
+-webkit-border-radius: 4px 4px 4px 4px;
+border: none;
+text-align:start;
+
+background: transparent;
+background: url(../images/power_white.png) no-repeat 75px 8px;
+background-size: 25px 25px;
+margin-left:15px;
+}
+#btnLogout:hover{
+    font-weight:400;
+    color: rgb(255, 70, 70);
+    text-shadow: 7px 0px  2px white;
+    font-family: Open Sans;
+    font-size: 13pt;
+    
+
+background: transparent;
+background: url(../images/power_red.png) no-repeat 75px 8px;
+background-size: 25px 25px;
 }
 #chat-content {
     background: rgba(83, 83, 83, 0.89);

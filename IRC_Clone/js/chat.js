@@ -119,6 +119,7 @@ $(function() {
                     return;
                 }
                 chatuser = data.message.name;
+                $("#footerContainer").hide();
                 $('#loggedInName').html(chatuser);
                 $("#titleContainer").slideUp(400);
                 $("#loginContainer").slideUp(400);

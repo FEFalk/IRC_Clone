@@ -102,11 +102,14 @@
 
     $('#btnLogout').on('click', function () {
         chat.close();
+        
+        $("#footerContainer").hide().delay(2000).slideDown();
         $("#mainNavbar").slideUp(400);
         $("#chat-content").slideUp(400);
         $("#loginContainer").delay(400).slideDown(700);
         $("#registerContainer").delay(400).slideDown(700);
         $("#titleContainer").delay(800).slideDown(700);
+        
     });
 
     // Show alert (alert-id, alert-text-id, message)
