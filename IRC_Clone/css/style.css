@@ -121,7 +121,7 @@ margin-left:15px;
 #btnLogout:hover{
     font-weight:400;
     color: rgb(255, 70, 70);
-    text-shadow: 7px 0px  2px white;
+    text-shadow: 20px 0px  10px red;
     font-family: Open Sans;
     font-size: 13pt;
     
