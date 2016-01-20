@@ -91,9 +91,9 @@ class Chat implements MessageComponentInterface
         }
         else if ($obj->type === 'part') {
             if ($this->parsePart($client, $obj))
-                echo "{$client->getUser()->getName()} part channel {$obj->message->chan}\n";
+                echo "{$client->getUser()->getName()} part channel {$obj->to}\n";
             else
-                echo "{$client->getUser()->getName()} unable to part channel {$obj->message->chan}\n";
+                echo "{$client->getUser()->getName()} unable to part channel {$obj->to}\n";
         }
         else if ($obj->type === 'topic') {
             if($this->parseTopic($client, $obj))
@@ -118,6 +118,10 @@ class Chat implements MessageComponentInterface
                 echo "{$client->getUser()->getName()} changed usermode of {$obj->message->user} in {$obj->to} to {$obj->message->mode}\n";
             else
                 echo "{$client->getUser()->getName()} unable to change usermode of {$obj->message->user} in {$obj->to}\n";
+        }
+        else if ($obj->type === 'clist') {
+            $this->parseChanList($client, $obj);
+            echo "{$client->getUser()->getName()} requested channel search\n";
         }
         
         // User operations
@@ -152,6 +156,7 @@ class Chat implements MessageComponentInterface
             return false;
         }
         
+        // Generate response array of channel info
         $chans = $client->getUser()->getChannels();
         foreach($chans as $channame => $arr) {
             // Get all users from database
@@ -280,8 +285,10 @@ class Chat implements MessageComponentInterface
     public function parseJoin($client, $obj)
     {
         $chan = null;
+        if ($obj->to[0] !== '#')
+            $obj->to = '#' . $obj->to;
         // Check channel format
-        if (!preg_match('/^([#][^\x07\x2C\s]{0,16})$/', $obj->to)) {
+        if (!preg_match('/^([#][^\x07\x2C\s]{2,16})$/', $obj->to)) {
             $error = ErrorCodes::BAD_FORMAT;
         }
         else {
@@ -384,7 +391,7 @@ class Chat implements MessageComponentInterface
             'message' => null
         ]);
         
-        $this->db->removeUserFromChannel($user->getUser(), $chan->getName());
+        $this->db->removeUserFromChannel($client->getUser(), $chan->getName());
         
         // Add event to database
         $this->db->addEvent($client->getUser()->getUserId(), $chan->getName(), 'part', $client->getUser()->getName());
@@ -639,6 +646,30 @@ class Chat implements MessageComponentInterface
         return true;
     }
     
+    public function parseChanList($client, $obj)
+    {
+        $chans = array();
+        // Get active channels
+        foreach($this->channels as $chan) {
+            if (strpos(strtoupper($chan->getName()), strtoupper($obj->message)) && !$chan->hasMode(Permissions::MODE_PRIVATE))
+                $chans[$chan->getName()] = array('topic' => $chan->getTopic(), 'users' => max(1, $chan->getUserCount()));
+        }
+        
+        // Get inactive channels
+        $search = $this->db->searchChannel($obj->message);
+        foreach($search as $name => $topic) {
+            if (!array_key_exists($name, $chans))
+                $chans[$name] = array('topic' => $topic, 'users' => 0);
+        }
+        
+        $client->send([
+            'type' => 'rclist',
+            'success' => true,
+            'message' => $chans
+        ]);
+        return true;
+    }
+    
     public function onClose(ConnectionInterface $conn) {
         echo "Connection {$conn->resourceId} has disconnected\n";
         
@@ -673,7 +704,7 @@ class Chat implements MessageComponentInterface
     public function getClientByName($name)
     {
         foreach($this->clients as $client) {
-            if ($client->getUser() && strtolower($client->getUser()->getName()) === strtolower($name)) {
+            if ($client->getUser() && strcasecmp($client->getUser()->getName(), $name) === 0) {
                 return $client;
             }
         }
@@ -683,7 +714,7 @@ class Chat implements MessageComponentInterface
     public function getChannelByName($name)
     {
         foreach($this->channels as $chan) {
-            if (strtolower($chan->getName()) === strtolower($name)) {
+            if (strcasecmp($chan->getName(), $name) === 0) {
                 return $chan;
             }
         }

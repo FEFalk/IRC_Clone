@@ -4,6 +4,7 @@ namespace IRCClone;
 
 use \PDO;
 use IRCClone\User;
+use IRCClone\Permissions;
 
 class Database
 {
@@ -129,6 +130,18 @@ class Database
         $chan = $stmt->fetch();
         $stmt->closeCursor();
         return $chan;
+    }
+    
+    public function searchChannel($chan)
+    {
+        $chans = array();
+        $stmt = $this->db->prepare('SELECT `name`, `topic` FROM `channels` WHERE `name` LIKE ? AND NOT `modes` & '. Permissions::MODE_PRIVATE .';');
+        $stmt->execute(array('%'.$chan.'%'));
+        while ($res = $stmt->fetch()) {
+            $chans[$res['name']] = $res['topic'];
+        }
+        $stmt->closeCursor();
+        return $chans;
     }
     
     /**

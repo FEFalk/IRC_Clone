@@ -43,7 +43,7 @@ class Channel
      */
     public function getUserCount()
     {
-        // TODO: Add offline users!
+        // TODO: Add offline users?
         return $this->users->count();
     }
     
@@ -81,6 +81,7 @@ class Channel
     public function removeUser(User $user)
     {
         $this->users->detach($user);
+        return true;
     }
     
     /*

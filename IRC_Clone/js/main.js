@@ -39,8 +39,8 @@
             inputs.prop('disabled', false);
         });
     });
-
-    $('#searchWord').keypress(function (event) {
+    
+    /*$('#searchWord').keypress(function (event) {
 
         if (event.which == 13) {
             event.preventDefault();
@@ -72,7 +72,7 @@
                 inputs.prop('disabled', false);
             });
         }
-    });
+    });*/
 
 
     $('#registerModal').on('hidden.bs.modal', function () {

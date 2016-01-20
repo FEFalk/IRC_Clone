@@ -53,7 +53,7 @@
         <h2 id="title">Welcome back!</h2>
         <form id="homeLoginForm">
             <div class="form-group">
-                <input id="homeLogin-username" type="text" placeholder="Username/Email" class="form-control">
+                <input autocomplete="off" id="homeLogin-username" type="text" placeholder="Username/Email" class="form-control">
             </div>
             <div class="form-group">
                 <input id="homeLogin-password" type="password" placeholder="Password" class="form-control">
@@ -87,9 +87,9 @@
     <div class="top-buffer container-fluid row-fluid row-no-padding" id="chat-content">
         <div class="col-md-2 panel btn-group-vertical nav" role="group" aria-label="channels" id="channel-list">
             <div id="searchDiv">
-	            <div class="alert alert-danger alert-dismissible hidden" id="search-alert" role="alert"><button type="button" class="close alertclose" aria-label="Close"><span aria-hidden="true">&times;</span></button><span id="search-txt-alert"></span></div>
 		        <form id="search-form" class="form-horizontal">		
-			        <input type="text" name="searchWord" id="searchWord" placeholder="Search for channels...">
+			        <input autocomplete="off" type="text" name="searchWord" id="searchWord" placeholder="Search for channels..."
+                            data-toggle="popover" data-trigger="manual" data-html="true" data-placement="bottom" data-content="">
 		        </form>
 	        </div>
             <h1 id="channelsTitle">CHANNELS</h1>

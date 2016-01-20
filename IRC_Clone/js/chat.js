@@ -1,3 +1,4 @@
+/* global chat */
 $(function() {
     window.chat = null;
     var chatuser = '';
@@ -16,20 +17,24 @@ $(function() {
         login: function(username, password) {
             if (chat)
                 chat.close();
-            var conn = new WebSocket('ws://' + window.location.hostname + ':8080');
+            chat = new WebSocket('ws://' + window.location.hostname + ':8080');
 
-            conn.onopen = function(e) {
+            chat.onopen = function(e) {
                 console.log("Connection established!\nLogging in... ");
-                conn.send(JSON.stringify({type: 'login', message: {username: username, password: password}}));
+                chat.send(JSON.stringify({type: 'login', message: {username: username, password: password}}));
             };
 
-            conn.onmessage = this.onMessage;
+            chat.onmessage = this.onMessage;
             
-            conn.onclose = function(e) {
+            chat.onclose = function(e) {
                 Chat.addMessage('', 'SERVER', 'Connection to server closed!');
             };
             
-            return conn;
+            chat.onerror = function(e) {
+                Chat.addMessage('', 'SERVER', 'Connection error!');
+            }
+            
+            return chat;
         },
         
         quit: function(quitmsg) {
@@ -153,7 +158,33 @@ $(function() {
                     return;
                 }
                 chatuser = data.from;
-                // TODO: something
+                $('#loggedInName').html(chatuser);
+            }
+            else if (data.type === 'rclist') {
+                $('#searchWord').popover('destroy');
+                var content = '<table class="table" id="searchrlist"><thead><tr><td>Channel</td><td>Topic</td></tr></thead><tbody>';
+                if (data.message.length == 0)
+                    content += '<tr><td>No channels found.</td><td>Press ENTER to create!</td></tr>';
+                else
+                    $.each(data.message, function(name, arr){
+                        if (!$('#channel-list > button[data-channel="' + name + '"]').length)
+                            content += '<tr class="searchitem '+ (arr.count == 0 ? 'active' : 'success') +'"><td>' + name + '</td><td>' + arr.topic + '</td></tr>';
+                    });
+                content += '</tbody></table>'
+                $('#searchWord').popover({
+                    placement: 'right',
+                    container: 'body',
+                    trigger: 'manual',
+                    html: true,
+                    content: content
+                }).popover('show');
+                $('#searchrlist').on('mouseleave', function(){
+                    $('#searchWord').popover('hide');
+                });
+                $('.searchitem').on('click', function(){
+                    chat.send(JSON.stringify({type: 'join', to: $(this).find('td:first').html(), message: ''}));
+                    $(this).html('');
+                });
             }
         },
         
@@ -281,12 +312,12 @@ $(function() {
     $('#login-form').submit(function(event) {
         event.preventDefault();
         
-        chat = Chat.login($('#login-username').val(), $('#login-password').val());
+        Chat.login($('#login-username').val(), $('#login-password').val());
     });
     $('#homeLoginForm').submit(function (event) {
         event.preventDefault();
 
-        chat = Chat.login($('#homeLogin-username').val(), $('#homeLogin-password').val());
+        Chat.login($('#homeLogin-username').val(), $('#homeLogin-password').val());
     });
     
     
@@ -372,6 +403,8 @@ $(function() {
             if (cmd === 'part') {
                 chat.send(JSON.stringify({type: 'part', to: to, message: msg}));
                 $('#channel-list > button[data-channel="' + to + '"]').remove();
+                $('.channel-item[data-channel="' + to + '"]').remove();
+                $('#channel-list > button').first().click();
             }
             else if (cmd === 'join' || cmd === 'topic' || cmd === 'mode' || cmd === 'kick'
                     || cmd === 'name')
@@ -409,6 +442,29 @@ $(function() {
             e.preventDefault();
             sendMessage();
         }
+    });
+    
+    var searchtimer;
+    function doSearch() {
+        var msg = ($('#searchWord').val()).trim();
+        if (msg.length == 0)
+            return;
+        chat.send(JSON.stringify({type: 'clist', message: msg}));
+    }
+    
+    $('#searchWord').on('keyup', function() {
+        clearTimeout(searchtimer);
+        searchtimer = setTimeout(doSearch, 1000);
+    });
+    $('#searchWord').on('keydown', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            var msg = ($('#searchWord').val()).trim();
+            if (msg.length < 2)
+                return;
+            chat.send(JSON.stringify({type: 'join', to: msg, message: ''}));
+        }
+        clearTimeout(searchtimer);
     });
 
     // Show alert (alert-id, alert-text-id, message)

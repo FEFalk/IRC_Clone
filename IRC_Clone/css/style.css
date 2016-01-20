@@ -444,8 +444,6 @@ background-size: 25px 25px;
     margin: 0 !important;
 
 }
-#user-list .active a, #user-list .active a:hover{
-}
 #user-list, #user-list:hover{
     outline:none;
     border-left:none;
@@ -674,4 +672,12 @@ background-size: 25px 25px;
 
 .top-buffer {
   margin-top: 1%;
+}
+
+.searchitem.active:hover {
+    background-color: #090;
+}
+
+.searchitem.success:hover {
+    background-color: #666;
 }
