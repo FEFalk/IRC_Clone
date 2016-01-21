@@ -138,7 +138,7 @@ $(function() {
                     Chat.setChannelModes(key, val.modes);
                     Chat.setUserList(key, val.users);
                 });
-                $('#channel-list > button').first().click();
+                $('#channel-list button:first').click();
             }
             else if (data.type === "rjoin") {
                 if (data.success === false) {
@@ -150,7 +150,7 @@ $(function() {
                 Chat.setChannelTopic(data.message.name, data.message.topic);
                 Chat.setChannelModes(data.message.name, data.message.modes);
                 Chat.setUserList(data.message.name, data.message.users);
-                $('#channel-list > button[data-channel="' + data.message.name + '"]').click();
+                $('#channel-list > span[data-channel="' + data.message.name + '"] > button').click();
             }
             else if (data.type === 'rname') {
                 if (data.success === false) {
@@ -167,7 +167,7 @@ $(function() {
                     content += '<tr><td>No channels found.</td><td>Press ENTER to create!</td></tr>';
                 else
                     $.each(data.message, function(name, arr){
-                        if (!$('#channel-list > button[data-channel="' + name + '"]').length)
+                        if (!$('#channel-list > span[data-channel="' + name + '"]').length)
                             content += '<tr class="searchitem '+ (arr.count == 0 ? 'active' : 'success') +'"><td>' + name + '</td><td>' + arr.topic + '</td></tr>';
                     });
                 content += '</tbody></table>'
@@ -179,30 +179,38 @@ $(function() {
                     content: content
                 }).popover('show');
                 $('#searchrlist').on('mouseleave', function(){
-                    $('#searchWord').popover('hide');
+                    $('#searchWord').popover('destroy');
                 });
                 $('.searchitem').on('click', function(){
                     chat.send(JSON.stringify({type: 'join', to: $(this).find('td:first').html(), message: ''}));
-                    $(this).html('');
+                    $('#searchWord').popover('destroy');
                 });
             }
         },
         
         addChannel: function(name) {
-            if ($('#channel-list > button[data-channel="' + name + '"]').length)
+            if ($('#channel-list > span[data-channel="' + name + '"]').length)
                 return;
             // Add to channel list
             var added = false;
-            var btn = $('<button type="button" class="btn btn-primary" data-channel="' + name + '">' + name + '<span class="badge"></span></button>');
-            $('#channel-list > button').each(function(i) {
+            var btn = $('<span class="input-group" data-channel="' + name + '"><span class="input-group-addon">&times;</span><button type="button" class="btn btn-primary">' + name + '</button><span class="badge"></span></span>');
+            $('#channel-list button').each(function(i) {
                 if (name.toUpperCase() < $(this).text().toUpperCase()) { 
-                    btn.insertBefore($(this));
+                    btn.insertBefore($(this).parent());
                     added = true;
                     return false;
                 }
             });
             if (!added)
                 btn.appendTo('#channel-list');
+            
+            $('span:first', btn).on('click', function(e){
+                var to = $(this).next().text();
+                chat.send(JSON.stringify({type: 'part', to: to, message: ''}));
+                $(this).parent().remove();
+                $('.channel-item[data-channel="' + to + '"]').remove();
+                $('#channel-list button:first').click();
+            });
             
             // Clone new div from template
             var clone = $('.channel-item[data-channel=""]').clone(true).attr('data-channel', name);
@@ -244,9 +252,9 @@ $(function() {
         
         removeUser: function(chan, name) {
             if (name === chatuser) {
-                $('#channel-list > button[data-channel="' + chan + '"]').remove();
+                $('#channel-list > span[data-channel="' + chan + '"]').remove();
                 if (!$('.channel-item:not(.hidden)').length)
-                    $('#channel-list > button').first().click();
+                    $('#channel-list button:first').click();
                 return;
             }
             delete $('.channel-item[data-channel="' + chan + '"]').data('users')[name];
@@ -255,14 +263,14 @@ $(function() {
         addMessage: function(chan, user, message, date) {
             if (!chan) return;
             date = typeof date !== 'undefined' ? date : Date.now() / 1000 | 0;
-            if (!$('#channel-list > button[data-channel="' + chan + '"]').length)
+            if (!$('#channel-list > span[data-channel="' + chan + '"]').length)
                 Chat.addChannel(chan);
             var chandiv, doscroll = false;
             if (chan == '')
                 chandiv = $('.channel-item:not(.hidden)');
             else
                 chandiv = $('.channel-item[data-channel="' + chan + '"]');
-            var chanlistitem = $('#channel-list > button[data-channel="'+chan+'"]');
+            var chanlistitem = $('#channel-list > span[data-channel="'+chan+'"]');
             var chatitem = $('div.chat', chandiv);
             if (chatitem[0].scrollHeight - chatitem.scrollTop() == chatitem.outerHeight() || chatitem[0].scrollHeight - chatitem.scrollTop() == chatitem.outerHeight() - 1)
                 doscroll = true;
@@ -276,7 +284,7 @@ $(function() {
             msgobj.smilify();
            
             if (chandiv.hasClass('hidden')) {
-                $('span', chanlistitem).text(parseInt(($('span', chanlistitem).text()) || "0") + 1);
+                $('span:last', chanlistitem).text(parseInt(($('span:last', chanlistitem).text()) || "0") + 1);
             }
             else if (doscroll) {
                 chatitem.scrollTop(chatitem[0].scrollHeight);
@@ -324,12 +332,13 @@ $(function() {
     // Change channel
     $('#channel-list').on('click', 'button', function() {
         // Strip badge text
-        var channel = $(this).clone().children().remove().end().text();
+        //var channel = $(this).clone().children().remove().end().text();
+        var channel = $(this).text();
         $('.channel-item:not(.hidden)').addClass('hidden');
         $('.channel-item[data-channel="' + channel + '"').removeClass('hidden');
         updateActiveUserlist();
-        $('#channel-list > button[data-channel="'+ channel +'"] span').text("");
-        $('#channel-list > button[data-channel="' + channel + '"]').addClass('active').siblings().removeClass('active');
+        $('#channel-list > span[data-channel="'+ channel +'"] > span:last').text("");
+        $('#channel-list > span[data-channel="' + channel + '"]').addClass('active').siblings().removeClass('active');
     });
     
     function updateActiveUserlist() {
@@ -402,9 +411,9 @@ $(function() {
             
             if (cmd === 'part') {
                 chat.send(JSON.stringify({type: 'part', to: to, message: msg}));
-                $('#channel-list > button[data-channel="' + to + '"]').remove();
+                $('#channel-list > span[data-channel="' + to + '"]').remove();
                 $('.channel-item[data-channel="' + to + '"]').remove();
-                $('#channel-list > button').first().click();
+                $('#channel-list button:first').click();
             }
             else if (cmd === 'join' || cmd === 'topic' || cmd === 'mode' || cmd === 'kick'
                     || cmd === 'name')
@@ -452,9 +461,11 @@ $(function() {
         chat.send(JSON.stringify({type: 'clist', message: msg}));
     }
     
-    $('#searchWord').on('keyup', function() {
-        clearTimeout(searchtimer);
-        searchtimer = setTimeout(doSearch, 1000);
+    $('#searchWord').on('keyup', function(e) {
+        if (e.which !== 13) {
+            clearTimeout(searchtimer);
+            searchtimer = setTimeout(doSearch, 1000);
+        }
     });
     $('#searchWord').on('keydown', function(e) {
         if (e.which === 13) {
@@ -463,6 +474,7 @@ $(function() {
             if (msg.length < 2)
                 return;
             chat.send(JSON.stringify({type: 'join', to: msg, message: ''}));
+            $('#searchWord').popover('destroy');
         }
         clearTimeout(searchtimer);
     });

@@ -146,29 +146,52 @@ background-size: 25px 25px;
 #chat-content #channelsTitle{
     margin-top:5px;
 }
-#channel-container{
-}
 #chat-frame{
     background-color: rgb(228, 228, 228);
 }
 
-#chat-content .nav .btn-primary{
+#channel-list > span > button, #channel-list > span{
     background-color: transparent !important;
     background: transparent !important;
-    
     border-left:none;
     border-right:none;
     opacity:0.5;
     border-color: rgba(111, 111, 111, 1);
 }
 
-#chat-content .nav > .active{
+#channel-list button, #channel-list > span {
+    width: 100%;
+}
+
+#channel-list > .active, #channel-list > .active > button {
     background-color: rgba(27, 174, 215, 0.89) !important;
     opacity:1;
 }
-#chat-content .nav .btn-primary:hover{
+#channel-list button:hover {
     background-color: rgba(0, 80, 224, 0.4) !important;
     opacity:1;
+}
+
+#channel-list > span > span.input-group-addon {
+    color: #f00;;
+    padding: 2px 2px;
+}
+
+#channel-list > span > span.input-group-addon:hover {
+    color: #000;
+    background-color: rgba(200, 0, 0, 1) !important;
+    border-color: rgba(200, 0, 0, 1) !important;
+    opacity:1;
+}
+
+#channel-list > span > button {
+    text-align: left;
+}
+
+#channel-list .badge {
+    position: absolute;
+    top: 25%;
+    right: 10px;
 }
 
 
@@ -216,12 +239,6 @@ background-size: 25px 25px;
 }
 .panel-heading .label:last-child{
     border:none;
-}
-.panel-heading .label-primary{
-
-}
-.panel-heading .label-info{
-
 }
 
 #loginContainer{
@@ -653,16 +670,6 @@ background-size: 25px 25px;
 }
 #chat-frame {
     height: 90%;
-}
-
-#channel-list button {
-    text-align: left;
-}
-
-#channel-list .badge {
-    position: absolute;
-    top: 25%;
-    right: 10px;
 }
 
 .row-no-padding > .panel {

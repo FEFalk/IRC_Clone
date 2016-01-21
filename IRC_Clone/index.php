@@ -82,7 +82,7 @@
         <p id="notRegText">Don't have a registered account?</p>
         <button id="btnNotRegistered" type="button" class="btn">Create Account</button>
     </div>
-
+    
     <!-- Chat Content -->
     <div class="top-buffer container-fluid row-fluid row-no-padding" id="chat-content">
         <div class="col-md-2 panel btn-group-vertical nav" role="group" aria-label="channels" id="channel-list">
