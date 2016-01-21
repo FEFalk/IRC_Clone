@@ -111,6 +111,10 @@
         $("#titleContainer").delay(800).slideDown(700);
         
     });
+    
+    $('body').on('hidden.bs.modal', '#remoteModal', function () {
+        $(this).removeData('bs.modal');
+    });
 
     // Show alert (alert-id, alert-text-id, message)
     function showAlert(id, txtid, msg) {

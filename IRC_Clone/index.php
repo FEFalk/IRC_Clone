@@ -27,8 +27,8 @@
             <div id="navbar" class="collapse navbar-collapse">
                 <ul class="nav navbar-nav">
                     <li><image src="images/chat_logo4_white.png" id="logoImage"></li>
-                    <li><a href="#about">About</a></li>
-                    <li><a href="#contact">Contact</a></li>
+                    <li><a href="about.html" data-target="#remoteModal" role="button" class="btn" data-toggle="modal">About</a></li>
+                    <li><a href="help.html" data-target="#remoteModal" role="button" class="btn" data-toggle="modal">Help</a></li>
                 </ul>
 				<form id="loggedIn-form" class="navbar-form navbar-right">
 					<div class="form-group">
@@ -107,6 +107,13 @@
         </ul>
     </div>
     
+    <!-- Modal for Help / About -->
+    <div id="remoteModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="remoteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            </div>
+        </div>
+    </div>
     
     <!-- Chat channel template -->
     <div class="channel-item hidden" data-channel="">
