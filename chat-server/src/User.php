@@ -34,7 +34,7 @@ class User
         $this->last_logout = $userinfo['last_logout'];
         
         foreach($userinfo['channels'] as $c => $p) {
-            $this->joinChannel($this->chat->getChannelOrCreate($c), $p);
+            $this->joinChannel($this->chat->getChannelOrCreate($c, $created), $p);
         }
     }
     

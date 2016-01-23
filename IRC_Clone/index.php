@@ -127,14 +127,14 @@
         </div>
     </div>
 
-        <!-- Footer Info -->
-        <div class="container" id="footerContainer">
-            <div id="textDiv">
-            <p>This is a school-project for a webdevelopment-course at Mälardalens Högskola in Sweden. 
-               The developers of this site are André Sääf, Alvin Samuelsson, Filiph Eriksson-Falk and Fredrik Frenning.
-            </p>
-            </div>
+    <!-- Footer Info -->
+    <div class="container" id="footerContainer">
+        <div id="textDiv">
+        <p>This is a school-project for a webdevelopment-course at Mälardalens Högskola in Sweden. 
+            The developers of this site are André Sääf, Alvin Samuelsson, Filiph Eriksson-Falk and Fredrik Frenning.
+        </p>
         </div>
+    </div>
 
 </body>
 </html>

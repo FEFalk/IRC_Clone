@@ -252,10 +252,10 @@ class Database
      * @param User $user User object
      * @param string $chan channel
      */
-    public function addUserToChannel(User $user, $chan)
+    public function addUserToChannel(User $user, $chan, $permissions = 0)
     {
-        $stmt = $this->db->prepare('INSERT INTO `user_channels` (`user`, `channel`, `permissions`) VALUES(?, ?, 0);');
-        $stmt->execute(array($user->getUserId(), $chan));
+        $stmt = $this->db->prepare('INSERT INTO `user_channels` (`user`, `channel`, `permissions`) VALUES(?, ?, ?);');
+        $stmt->execute(array($user->getUserId(), $chan, $permissions));
         $c = $stmt->rowCount();
         $stmt->closeCursor();
         return $c == 1;

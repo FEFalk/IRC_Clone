@@ -47,7 +47,7 @@ class Chat implements MessageComponentInterface
         }
         
         $obj = json_decode($msg);
-        print_r($obj);
+        //print_r($obj);
         if (!$obj)
             return;
         
@@ -292,7 +292,7 @@ class Chat implements MessageComponentInterface
             $error = ErrorCodes::BAD_FORMAT;
         }
         else {
-            $chan = $this->getChannelOrCreate($obj->to);
+            $chan = $this->getChannelOrCreate($obj->to, $created);
             if (!$chan)
                 $error = ErrorCodes::UNKNOWN_ERROR;
         }
@@ -319,11 +319,16 @@ class Chat implements MessageComponentInterface
             return false;
         }
         
+        // Channel didn't exist and was created, set user permissions to Channel Operator
+        if ($created)
+            $permissions = 2;
+        
         // We have a channel and the user has provided the correct password/userlimit not reached
         $chan->addUser($client->getUser(), $permissions);
+        $client->getUser()->joinChannel($chan, $permissions);
         
         // Add user to channel database
-        $this->db->addUserToChannel($client->getUser(), $chan->getName());
+        $this->db->addUserToChannel($client->getUser(), $chan->getName(), $permissions);
         
         // Populate user list
         $users = $this->db->getChannelUsers($chan->getName());
@@ -721,8 +726,9 @@ class Chat implements MessageComponentInterface
         return null;
     }
 
-    public function getChannelOrCreate($name)
+    public function getChannelOrCreate($name, &$created)
     {
+        $created = false;
         $chan = $this->getChannelByName($name);
         if (!$chan) {
             // Channel does not exist or has currently no active users (destructed)
@@ -732,6 +738,7 @@ class Chat implements MessageComponentInterface
                 if (!$this->db->createChannel($name))
                     return null;
                 $chan = new Channel($name, $this);
+                $created = true;
             }
             else {
                 // Channel exists but is destructed
