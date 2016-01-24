@@ -1,3 +1,4 @@
+/* global Notification */
 /* global chat */
 $(function() {
     window.chat = null;
@@ -139,6 +140,11 @@ $(function() {
                     Chat.setUserList(key, val.users);
                 });
                 $('#channel-list button:first').click();
+                
+                // Ask for notification permission
+                if (window.Notification && Notification.permission !== "denied") {
+                    Notification.requestPermission();
+                }
             }
             else if (data.type === "rjoin") {
                 if (data.success === false) {
@@ -289,6 +295,7 @@ $(function() {
             else if (doscroll) {
                 chatitem.scrollTop(chatitem[0].scrollHeight);
             }
+            sendNotification(chan + ": New Message from " + user + "\n" + msg);
         }
     };
     
@@ -489,6 +496,25 @@ $(function() {
      * Support functions
      */
     
+    var vis = (function(){
+        var stateKey, eventKey, keys = {
+            hidden: "visibilitychange",
+            webkitHidden: "webkitvisibilitychange",
+            mozHidden: "mozvisibilitychange",
+            msHidden: "msvisibilitychange"
+        };
+        for (stateKey in keys) {
+            if (stateKey in document) {
+                eventKey = keys[stateKey];
+                break;
+            }
+        }
+        return function(c) {
+            if (c) document.addEventListener(eventKey, c);
+            return !document[stateKey];
+        }
+    })();
+    
     // Add constant properties to an object
     function withValue(value) {
         var d = withValue.d || (
@@ -503,5 +529,21 @@ $(function() {
         return d;
     }
     
-
+    function sendNotification(text) {
+        if (vis())
+            return;
+        if (!("Notification" in window)) {
+            console.log("This browser does not support system notifications");
+        }
+        else if (Notification.permission === "granted") {
+            var notification = new Notification("Project Chat", {body: text, icon: "images/chat_logo4_black.png"});
+        }
+        else if (Notification.permission !== 'denied') {
+            Notification.requestPermission(function (permission) {
+                if (permission === "granted") {
+                    var notification = new Notification("Project Chat", {body: text, icon: "images/chat_logo4_black.png"});
+                }
+            });
+        }
+    }
 });

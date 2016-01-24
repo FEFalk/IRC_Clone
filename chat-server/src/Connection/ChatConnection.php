@@ -58,6 +58,13 @@ class ChatConnection implements ChatConnectionInterface
             $this->chat->getDefaultChannel()->addUser($this->user, $perms);
             $this->user->joinChannel($this->chat->getDefaultChannel(), $perms);
             $this->chat->db->addUserToChannel($this->user, $this->chat->getDefaultChannel()->getName(), $perms);
+            // Send join event to users in channel
+            $this->chat->getDefaultChannel()->send([
+                'type' => 'join',
+                'from' => $this->user->getName(),
+                'date' => time(),
+                'message' => $perms
+            ]);
         }
         return $this->user;
     }

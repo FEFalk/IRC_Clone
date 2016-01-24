@@ -32,9 +32,29 @@ class Database
     public function connect()
     {
         $connstring = 'mysql:host='. $this->ip .';dbname='. $this->database .';';
-        $this->db = new PDO($connstring, $this->username, $this->password,
-            array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''));
-        $this->db->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
+        $this->db = new PDO($connstring, $this->username, $this->password, array(
+            PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\'',
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+        ));
+    }
+    
+    // Fix for timed out connections
+    public function prepare($query)
+    {
+        try {
+            $stmt = $this->db->prepare($query);
+        }
+        catch (PDOException $ex) {
+            // Connection has timed out. Reconnect
+            if (strpos($ex->getMessage(), 'server has gone away') !== false) {
+                $this->connect();
+                $stmt = $this->db->prepare($query);
+            }
+            else {
+                throw $ex;
+            }
+        }
+        return $stmt;
     }
     
     /**
@@ -44,7 +64,7 @@ class Database
      */
     public function getUserInfo($username)
     {
-        $stmt = $this->db->prepare('SELECT `id`, `name`, `password`, `email`, `permissions`, `last_login`, `last_logout` FROM `users` WHERE `name` = ? OR `email` = ? LIMIT 1;');
+        $stmt = $this->prepare('SELECT `id`, `name`, `password`, `email`, `permissions`, `last_login`, `last_logout` FROM `users` WHERE `name` = ? OR `email` = ? LIMIT 1;');
         $stmt->execute(array($username, $username));
         $result = $stmt->fetch();
         $stmt->closeCursor();
@@ -59,7 +79,7 @@ class Database
     public function getUserChannels($userid)
     {
         $chans = array();
-        $stmt = $this->db->prepare('SELECT `channel`, `permissions` FROM `user_channels` WHERE `user` = ?;');
+        $stmt = $this->prepare('SELECT `channel`, `permissions` FROM `user_channels` WHERE `user` = ?;');
         $stmt->execute(array($userid));
         while ($res = $stmt->fetch()) {
             $chans[$res['channel']] = $res['permissions'];
@@ -76,7 +96,7 @@ class Database
     public function getChannelUsers($channel)
     {
         $users = array();
-        $stmt = $this->db->prepare('SELECT `users`.`name`, `user_channels`.`permissions` FROM `user_channels` INNER JOIN `users` ON `user_channels`.`user` = `users`.`id` WHERE `channel` = ?;');
+        $stmt = $this->prepare('SELECT `users`.`name`, `user_channels`.`permissions` FROM `user_channels` INNER JOIN `users` ON `user_channels`.`user` = `users`.`id` WHERE `channel` = ?;');
         $stmt->execute(array($channel));
         while ($res = $stmt->fetch()) {
             $users[$res['name']] = array('permissions' => $res['permissions'], 'active' => false);
@@ -94,7 +114,7 @@ class Database
     public function getOfflineMessages(User $user, $limit = 30)
     {
         $result = array();
-        $stmt = $this->db->prepare("
+        $stmt = $this->prepare("
             SELECT `users`.`name` AS `from`, `message`, `date`
             FROM `events`
             INNER JOIN `users` ON `users`.`id` = `userid`
@@ -125,7 +145,7 @@ class Database
      */
     public function getChannelInfo($chan)
     {
-        $stmt = $this->db->prepare('SELECT `name`, `modes`, `topic`, `password`, `userlimit` FROM `channels` WHERE `name` = ? LIMIT 1;');
+        $stmt = $this->prepare('SELECT `name`, `modes`, `topic`, `password`, `userlimit` FROM `channels` WHERE `name` = ? LIMIT 1;');
         $stmt->execute(array($chan));
         $chan = $stmt->fetch();
         $stmt->closeCursor();
@@ -135,7 +155,7 @@ class Database
     public function searchChannel($chan)
     {
         $chans = array();
-        $stmt = $this->db->prepare('SELECT `name`, `topic` FROM `channels` WHERE `name` LIKE ? AND NOT `modes` & '. Permissions::MODE_PRIVATE .';');
+        $stmt = $this->prepare('SELECT `name`, `topic` FROM `channels` WHERE `name` LIKE ? AND NOT `modes` & '. Permissions::MODE_PRIVATE .';');
         $stmt->execute(array('%'.$chan.'%'));
         while ($res = $stmt->fetch()) {
             $chans[$res['name']] = $res['topic'];
@@ -155,7 +175,7 @@ class Database
         foreach($info as $key => $val)
             $query .= '`' . $key . '` = :'.$key.' ';
         $query .= 'WHERE `name` = :name;';
-        $stmt = $this->db->prepare($query);
+        $stmt = $this->prepare($query);
         foreach($info as $key => $val)
             $stmt->bindParam(':'.$key, $val, gettype($val) == 'integer' ? PDO::PARAM_INT : PDO::PARAM_STR);
         $stmt->bindParam(':name', $chan, PDO::PARAM_STR);
@@ -172,7 +192,7 @@ class Database
      */
     public function createChannel($name)
     {
-        $stmt = $this->db->prepare('
+        $stmt = $this->prepare('
             INSERT INTO `channels` (`name`, `modes`, `userlimit`)
             VALUES(?, 0, 0);');
         $stmt->execute(array($name));
@@ -189,7 +209,7 @@ class Database
      */
     public function getUserChannelPermissions($userid, $channel)
     {
-        $stmt = $this->db->prepare('SELECT `permissions` FROM `user_channels` WHERE `user` = ? AND `channel` = ?');
+        $stmt = $this->prepare('SELECT `permissions` FROM `user_channels` WHERE `user` = ? AND `channel` = ?');
         $stmt->execute(array($userid, $channel));
         $result = $stmt->fetch();
         $stmt->closeCursor();
@@ -198,7 +218,7 @@ class Database
     
     public function setUserChannelPermissions($chan, $userid, $permissions)
     {
-        $stmt = $this->db->prepare('UPDATE `user_channels` SET `permissions` = ? WHERE `user` = ? AND `channel` = ?;');
+        $stmt = $this->prepare('UPDATE `user_channels` SET `permissions` = ? WHERE `user` = ? AND `channel` = ?;');
         $stmt->execute(array($permissions, $userid, $chan));
         $c = $stmt->rowCount();
         $stmt->closeCursor();
@@ -212,7 +232,7 @@ class Database
     public function loginUser(User $user) 
     {
         // Update last_login
-        $stmt = $this->db->prepare('UPDATE `users` SET `last_login` = ? WHERE `id` = ?;');
+        $stmt = $this->prepare('UPDATE `users` SET `last_login` = ? WHERE `id` = ?;');
         $stmt->execute(array(time(), $user->getUserId()));
         $c = $stmt->rowCount();
         $stmt->closeCursor();
@@ -226,7 +246,7 @@ class Database
     public function logoutUser(User $user)
     {
         // Update last_logout
-        $stmt = $this->db->prepare('UPDATE `users` SET `last_logout` = ? WHERE `id` = ?;');
+        $stmt = $this->prepare('UPDATE `users` SET `last_logout` = ? WHERE `id` = ?;');
         $stmt->execute(array(time(), $user->getUserId()));
         $c = $stmt->rowCount();
         $stmt->closeCursor();
@@ -240,7 +260,7 @@ class Database
      */
     public function changeUserName(User $user, $newname)
     {
-        $stmt = $this->db->prepare('UPDATE `users` SET `name` = ? WHERE `id` = ?;');
+        $stmt = $this->prepare('UPDATE `users` SET `name` = ? WHERE `id` = ?;');
         $stmt->execute(array($newname, $user->getUserId()));
         $c = $stmt->rowCount();
         $stmt->closeCursor();
@@ -254,7 +274,7 @@ class Database
      */
     public function addUserToChannel(User $user, $chan, $permissions = 0)
     {
-        $stmt = $this->db->prepare('INSERT INTO `user_channels` (`user`, `channel`, `permissions`) VALUES(?, ?, ?);');
+        $stmt = $this->prepare('INSERT INTO `user_channels` (`user`, `channel`, `permissions`) VALUES(?, ?, ?);');
         $stmt->execute(array($user->getUserId(), $chan, $permissions));
         $c = $stmt->rowCount();
         $stmt->closeCursor();
@@ -268,7 +288,7 @@ class Database
      */
     public function removeUserFromChannel(User $user, $chan)
     {
-        $stmt = $this->db->prepare('DELETE FROM `user_channels` WHERE `user` = ? AND `channel` = ?;');
+        $stmt = $this->prepare('DELETE FROM `user_channels` WHERE `user` = ? AND `channel` = ?;');
         $stmt->execute(array($user->getUserId(), $chan));
         $c = $stmt->rowCount();
         $stmt->closeCursor();
@@ -287,7 +307,7 @@ class Database
     {
         if ($date === 0)
             $date =  time();
-        $stmt = $this->db->prepare('INSERT INTO `events` (`userid`, `to`, `type`, `message`, `date`) VALUES(?, ?, ?, ?, ?)');
+        $stmt = $this->prepare('INSERT INTO `events` (`userid`, `to`, `type`, `message`, `date`) VALUES(?, ?, ?, ?, ?)');
         $stmt->execute(array($userid, $to, $type, $message, $date));
         $c = $stmt->rowCount();
         $stmt->closeCursor();
